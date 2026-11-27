@@ -1,8 +1,17 @@
 # Q3AFORMAL
 
-Q3AFORMAL is a self-contained formal verification tool for application-specific integrated circuit (ASIC) register-transfer level (RTL) designs written in SystemVerilog. It runs on Windows x64 and Linux x86-64. It checks properties from the supported SystemVerilog Assertions (SVA) profiles, produces independently checkable proofs, and replays counterexamples and cover witnesses from source.
+Q3AFORMAL verifies application-specific integrated circuit (ASIC) register-transfer level (RTL) designs written in SystemVerilog. It checks properties from the supported SystemVerilog Assertions (SVA) profiles, produces independently checkable proofs, and replays counterexamples and cover witnesses from source.
 
-[R17 Cross-platform Preview](https://github.com/nguyenquanicd/Q3AFORMAL/releases/tag/r17-preview) · [Specification](Q3AFORMAL_SPECIFICATION.md) · [User Guide (Vietnamese)](q3aformal/USER_GUIDE.md)
+## Platforms and downloads
+
+| Platform | Distribution | Waveform viewer |
+| --- | --- | --- |
+| Windows x64 | [R17 Preview Windows ZIP](https://github.com/nguyenquanicd/Q3AFORMAL/releases/download/r17-preview/q3aformal-windows-x64-development-preview-r16.zip), the qualified R16 binary | Native viewer or offline Hypertext Markup Language (HTML) |
+| Ubuntu 24.04 x86-64 | [R17 Preview Linux archive](https://github.com/nguyenquanicd/Q3AFORMAL/releases/download/r17-preview/q3aformal-linux-x64.tar.gz) | Offline HTML |
+| macOS 15, Apple silicon (arm64) | GitHub Actions development artifact `q3aformal-macos-arm64` | Offline HTML |
+| macOS 15, Intel (x86-64) | GitHub Actions development artifact `q3aformal-macos-x64` | Offline HTML |
+
+[R17 Cross-platform Preview](https://github.com/nguyenquanicd/Q3AFORMAL/releases/tag/r17-preview) · [Tested macOS packages](https://github.com/nguyenquanicd/Q3AFORMAL/actions/runs/46013581165#artifacts) · [Specification](Q3AFORMAL_SPECIFICATION.md) · [User Guide (Vietnamese)](q3aformal/USER_GUIDE.md)
 
 ## Capabilities
 
@@ -17,16 +26,13 @@ Q3AFORMAL is a self-contained formal verification tool for application-specific 
 
 A bounded pass applies to the checked bound. An unbounded proof requires a checked certificate under the recorded assumptions. Start with the [baseline profile](q3aformal/specs/003-phase1-block-mvp/plan.md#supported-phase-1-language-profile) and consult the [extended conformance matrix](q3aformal/specs/005-phase3-profile-expansion/conformance-matrix.md) for accepted syntax and limits.
 
-## Install R17 Preview
+## Install
 
-Download [install.py](https://github.com/nguyenquanicd/Q3AFORMAL/releases/download/r17-preview/install.py), [INSTALL_SHA256SUMS](https://github.com/nguyenquanicd/Q3AFORMAL/releases/download/r17-preview/INSTALL_SHA256SUMS), and the archive for your platform into the same directory. The installer requires Python 3, detects the operating system and processor architecture, and verifies the archive's SHA‑256 checksum before extraction.
+1. On Windows or Ubuntu, download the archive for your platform together with [install.py](https://github.com/nguyenquanicd/Q3AFORMAL/releases/download/r17-preview/install.py) and [INSTALL_SHA256SUMS](https://github.com/nguyenquanicd/Q3AFORMAL/releases/download/r17-preview/INSTALL_SHA256SUMS). Save all three files in the same directory.
+2. On macOS, download and unpack the Actions artifact for your architecture. It contains the `.tar.gz` archive, installer and checksum manifest. Use Python 3 running natively on your Mac so the installer detects the intended architecture. [macOS build and installation guide](q3aformal/docs/macos.md)
+3. From the directory containing these files, run `python install.py` on Windows or `python3 install.py` on Ubuntu and macOS. On Windows, `py -3 install.py` works with the Python launcher. The installer chooses the archive for the current operating system and processor architecture, checks its SHA-256 checksum and extracts it.
 
-| Platform | Download | Install command |
-| --- | --- | --- |
-| Windows x64 | [Windows ZIP](https://github.com/nguyenquanicd/Q3AFORMAL/releases/download/r17-preview/q3aformal-windows-x64-development-preview-r16.zip) | `python install.py` |
-| Ubuntu 24.04 x86-64 | [Linux archive](https://github.com/nguyenquanicd/Q3AFORMAL/releases/download/r17-preview/q3aformal-linux-x64.tar.gz) | `python3 install.py` |
-
-On Windows, `py -3 install.py` also works when the Python launcher is installed. The Windows archive in R17 Preview is the original, qualified R16 package. The default installation directories are `%LOCALAPPDATA%\Q3AFORMAL` on Windows and `~/.local/opt/q3aformal` on Linux. Use `--prefix PATH` for a new destination or `--assets-dir PATH` to locate the downloads elsewhere. For manual installation, verify the archive against `INSTALL_SHA256SUMS` and extract it to a writable directory. [Installation details](q3aformal/USER_GUIDE.md#3-cài-đặt-và-build)
+The default installation directory is `%LOCALAPPDATA%\Q3AFORMAL` on Windows and `~/.local/opt/q3aformal` on Ubuntu and macOS. Use `--prefix PATH` to choose a new destination or `--assets-dir PATH` to locate the downloads elsewhere. For manual installation, verify the archive against `INSTALL_SHA256SUMS` and extract it to a writable directory. [Installation details](q3aformal/USER_GUIDE.md#3-cài-đặt-và-build)
 
 ## Quick start
 
@@ -47,7 +53,7 @@ $q3a = '.\prototype\bin\q3aformal-sourcecheck.exe'
 
 To save an offline waveform page, run `& $q3a debug cover-witness > cover-witness.html` in PowerShell 7.4 or later and open the HTML file in a browser.
 
-### Linux shell
+### Ubuntu and macOS shell
 
 ~~~sh
 cd "$HOME/.local/opt/q3aformal"
@@ -60,7 +66,7 @@ q3a=./prototype/bin/q3aformal-sourcecheck
 "$q3a" debug cover-witness > cover-witness.html
 ~~~
 
-Open `cover-witness.html` in a browser. On a headless machine, copy the file to your workstation. On either platform, use `trace view-vcd input.vcd` with the same executable to generate an HTML page for a standalone Value Change Dump file.
+Open `cover-witness.html` in a browser. On macOS, run `open cover-witness.html`. On a headless machine, copy the file to your workstation. On all three platforms, use `trace view-vcd input.vcd` with the same executable and redirect its output to HTML to view a standalone VCD file.
 
 ## Projects and results
 
@@ -102,13 +108,18 @@ The default build enables the baseline profile. To build with the full R16 featu
 
 The `Development` flag names are part of the build interface. The R16 qualification applies to the exact released executable pair and manifest. An independent rebuild has its own build identity.
 
-## Linux build from source
+## Ubuntu and macOS builds from source
 
-Follow the [Linux build, packaging and execution guide](q3aformal/docs/linux.md). Linux uses the command-line proof engines and the offline HTML waveform viewer. The existing R16 Windows qualification applies to the published Windows package.
+Both platforms use CMake 3.20 or later, a C++17 compiler and Python 3. The platform guides cover prerequisites, local packaging and waveform debugging. [Linux build guide](q3aformal/docs/linux.md#build-and-validate) · [macOS build guide](q3aformal/docs/macos.md#build-and-package)
 
-## macOS build and installation
+## Re-run qualification on GitHub Actions
 
-The macOS development build targets macOS 15 on Apple silicon and Intel. Build and run the shared regression with CMake, or use the package generated for your architecture by the macOS workflow. The installer selects the archive automatically. Use the offline HTML waveform viewer on macOS. [macOS guide](q3aformal/docs/macos.md) · [macOS qualification workflow](https://github.com/nguyenquanicd/Q3AFORMAL/actions/workflows/macos-cli.yml)
+| Workflow | What it verifies | Artifacts |
+| --- | --- | --- |
+| [R17 Ubuntu release audit](https://github.com/nguyenquanicd/Q3AFORMAL/actions/workflows/r17-ubuntu-release-audit.yml) | Downloads the published R17 assets, installs on Ubuntu 24.04 x86-64 outside Windows Subsystem for Linux (WSL), verifies the example proofs and renders cover and VCD waveforms. | Verdict, command logs, HTML and input VCD |
+| [macOS CLI qualification](https://github.com/nguyenquanicd/Q3AFORMAL/actions/workflows/macos-cli.yml) | Builds on macOS 15 for Apple silicon and Intel, runs the shared formal regression, installs each package and runs the regression again with the packaged executables. | One installable archive, installer and checksum manifest per architecture |
+
+With write access to the repository, open a workflow, choose **Run workflow**, select `main` and confirm. Open the run's **Summary** and download the ZIP from **Artifacts** when the run completes. [Ubuntu audit instructions (Vietnamese)](q3aformal/USER_GUIDE.md#kiểm-thử-gói-linux-bằng-github-actions)
 
 ## Repository layout
 
@@ -121,14 +132,17 @@ The macOS development build targets macOS 15 on Apple silicon and Intel. Build a
 | [q3aformal/prototype/corpus/](q3aformal/prototype/corpus/) | Source-to-model vectors, language conformance matrices and example RTL. |
 | [q3aformal/prototype/benchmark/](q3aformal/prototype/benchmark/) | Frozen workloads, resource measurement and evidence audit tools. |
 | [q3aformal/specs/](q3aformal/specs/) | Phase plans, semantic reviews and acceptance records. |
-| [q3aformal/scripts/](q3aformal/scripts/) | Build and Windows packaging support. |
-
-The local migration includes the full historical qualification workspace. GitHub carries the source, specifications, release summaries and R17 Preview downloads. Historical run directories and build products are maintained in the local workspace.
+| [q3aformal/scripts/](q3aformal/scripts/) | Build identity and packaging helpers. |
+| [.github/workflows/](.github/workflows/) | Platform builds and release verification workflows. |
 
 ## Release qualification
 
 R17 Preview passed all 15 Phase 2 benchmark runs on a GitHub-hosted Ubuntu 24.04 x86-64 virtual machine outside Windows Subsystem for Linux (WSL). The maximum measured wall time was 704.8 ms and the maximum sampled process-tree resident memory was 8.0 MiB. The packaged Linux command-line regression and automatic installation on both platforms also passed. [Workflow](https://github.com/nguyenquanicd/Q3AFORMAL/actions/runs/46002227798) · [Linux benchmark verdict](https://github.com/nguyenquanicd/Q3AFORMAL/releases/download/r17-preview/linux-x86-64-verdict.json)
 
-R16 closed all four roadmap phases and 20 acceptance criteria in the approved Windows x64 scope. All 119 regression suites passed across the initial run and one isolated retry after a host-memory interruption. Phase 2 passed 15 source-revalidated runs. The longest run took 0.858 seconds and the highest measured process-tree working set was 55.62 MiB. [Release acceptance](q3aformal/evidence/r16/release-acceptance.json) Â· [Subsystem verdict](q3aformal/evidence/r16/phase2-acceptance/verdict.json)
+R16 closed all four roadmap phases and 20 acceptance criteria in the approved Windows x64 scope. All 119 regression suites passed across the initial run and one isolated retry after a host-memory interruption. Phase 2 passed 15 source-revalidated runs. The longest run took 0.858 seconds and the highest measured process-tree working set was 55.62 MiB. [Release acceptance](q3aformal/evidence/r16/release-acceptance.json) · [Subsystem verdict](q3aformal/evidence/r16/phase2-acceptance/verdict.json)
+
+The macOS 15 development builds passed the shared regression and installer checks on Apple silicon and Intel. [macOS qualification and packages](https://github.com/nguyenquanicd/Q3AFORMAL/actions/runs/46013581165)
+
+## License
 
 Q3AFORMAL is licensed under [Apache License 2.0](LICENSE). The GitHub Spec Kit workflow assets retain the [MIT license](q3aformal/.specify/LICENSE). The Windows ZIP includes the applicable compiler runtime notices.

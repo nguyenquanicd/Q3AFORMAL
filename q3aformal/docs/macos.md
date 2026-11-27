@@ -10,7 +10,7 @@ Install the Xcode Command Line Tools, CMake 3.20 or later and Python 3. From the
 cmake -S q3aformal -B q3aformal/build/macos -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_DEPLOYMENT_TARGET=15.0
 cmake --build q3aformal/build/macos --parallel 3
 ctest --test-dir q3aformal/build/macos --output-on-failure
-cpack --config q3aformal/build/macos/CPackConfig.cmake -B `q3aformal/dist`
+cpack --config q3aformal/build/macos/CPackConfig.cmake -B q3aformal/dist
 ~~~
 
 This produces `q3aformal-macos-arm64.tar.gz` or `q3aformal-macos-x64.tar.gz`. A package downloaded from the macOS qualification workflow includes the installer and checksum manifest. With the three files in one directory, run `python3 install.py`. Use a native Python process so the architecture reported to the installer matches the machine. The default location is `~/.local/opt/q3aformal`. Choose a fresh directory with `--prefix` when testing multiple builds. The packages are development builds from the repository workflow. The R17 Preview release assets cover Windows and Linux.
