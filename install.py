@@ -17,7 +17,8 @@ ASSETS = {
     "Windows": "q3aformal-windows-x64-development-preview-r16.zip",
     "Linux": "q3aformal-linux-x64.tar.gz",
 }
-DEFAULT_ASSETS = Path(__file__).resolve().parent / "q3aformal/dist"
+SCRIPT_DIR = Path(__file__).resolve().parent
+DEFAULT_ASSETS = SCRIPT_DIR if (SCRIPT_DIR / "INSTALL_SHA256SUMS").is_file() else SCRIPT_DIR / "q3aformal/dist"
 
 
 def select_archive(system, machine):

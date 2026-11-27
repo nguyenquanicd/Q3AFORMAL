@@ -6,6 +6,10 @@ on:
     branches:
       - codex/linux-x86-64
 
+concurrency:
+  group: linux-qualification-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
@@ -35,7 +39,7 @@ jobs:
             sha256sum q3aformal-linux-x64.tar.gz "$windows" > INSTALL_SHA256SUMS
           )
           cp install.py candidate/
-          python3 candidate/install.py --assets-dir candidate --prefix "$RUNNER_TEMP/q3aformal"
+          python3 candidate/install.py --prefix "$RUNNER_TEMP/q3aformal"
           python3 q3aformal/prototype/tests/test_linux_cli.py "$RUNNER_TEMP/q3aformal/prototype/bin/q3aformal-sourcecheck" "$RUNNER_TEMP/q3aformal/prototype/bin/q3aformal-proofcheck"
       - name: Benchmark the installed binary
         run: |
@@ -57,3 +61,26 @@ jobs:
             candidate/install.py
             candidate/linux-x86-64-verdict.json
           if-no-files-found: error
+
+  windows-install:
+    runs-on: windows-2022
+    timeout-minutes: 10
+    needs: qualify
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: qualified-release-files
+          path: candidate
+      - name: Test automatic Windows package selection
+        shell: pwsh
+        run: |
+          $target = Join-Path $env:RUNNER_TEMP 'q3aformal'
+          python candidate/install.py --prefix $target
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Set-Location $target
+          & ./prototype/bin/q3aformal-sourcecheck.exe prove prototype/pdr-pipeline.q3a --evidence-dir safety-proof | ConvertFrom-Json | ForEach-Object {
+            if ($_.status -cne "PROVEN") { throw "The installed Windows proof did not pass" }
+          }
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & ./prototype/bin/q3aformal-sourcecheck.exe verify-pdr prototype/pdr-pipeline.q3a --property p_safe --evidence-dir safety-proof
+          exit $LASTEXITCODE

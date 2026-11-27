@@ -2,7 +2,7 @@
 
 Q3AFORMAL is a self-contained formal verification tool for application-specific integrated circuit (ASIC) register-transfer level (RTL) designs written in SystemVerilog. It runs on Windows x64 and Linux x86-64. It checks properties from the supported SystemVerilog Assertions (SVA) profiles, produces independently checkable proofs, and replays counterexamples and cover witnesses from source.
 
-[R16 Windows release](https://github.com/nguyenquanicd/Q3AFORMAL/releases/tag/r16) · [Specification](Q3AFORMAL_SPECIFICATION.md) · [Release acceptance](q3aformal/evidence/r16/release-acceptance.json)
+[R16 Windows release](https://github.com/nguyenquanicd/Q3AFORMAL/releases/tag/r16) Â· [Specification](Q3AFORMAL_SPECIFICATION.md) Â· [Release acceptance](q3aformal/evidence/r16/release-acceptance.json)
 
 ## Capabilities
 
@@ -21,7 +21,7 @@ A bounded pass applies to the checked bound. An unbounded proof requires a check
 
 The Python 3 installer detects the operating system and CPU architecture. It selects the Windows x64 ZIP or Linux x86-64 archive, verifies its SHA-256 checksum, and installs into a new user-owned directory. The asset directory must contain the matching package and its entry in `INSTALL_SHA256SUMS`.
 
-From the repository root, when the release assets and the checksum manifest are available in `q3aformal/dist`, run:
+Download the matching archive, `install.py`, and `INSTALL_SHA256SUMS` into one directory. From a source checkout, you can also keep the archives and the checksum manifest in `q3aformal/dist`. Run:
 
 ~~~sh
 python3 install.py
@@ -126,6 +126,6 @@ The local migration includes the full historical qualification workspace. GitHub
 
 ## Release qualification
 
-R16 closed all four roadmap phases and 20 acceptance criteria in the approved Windows x64 scope. All 119 regression suites passed across the initial run and one isolated retry after a host-memory interruption. Phase 2 passed 15 source-revalidated runs. The longest run took 0.858 seconds and the highest measured process-tree working set was 55.62 MiB. [Release acceptance](q3aformal/evidence/r16/release-acceptance.json) · [Subsystem verdict](q3aformal/evidence/r16/phase2-acceptance/verdict.json)
+R16 closed all four roadmap phases and 20 acceptance criteria in the approved Windows x64 scope. All 119 regression suites passed across the initial run and one isolated retry after a host-memory interruption. Phase 2 passed 15 source-revalidated runs. The longest run took 0.858 seconds and the highest measured process-tree working set was 55.62 MiB. [Release acceptance](q3aformal/evidence/r16/release-acceptance.json) Â· [Subsystem verdict](q3aformal/evidence/r16/phase2-acceptance/verdict.json)
 
 Q3AFORMAL is licensed under [Apache License 2.0](LICENSE). The GitHub Spec Kit workflow assets retain the [MIT license](q3aformal/.specify/LICENSE). The Windows ZIP includes the applicable compiler runtime notices.
