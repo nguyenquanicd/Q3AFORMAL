@@ -63,9 +63,14 @@ def render(name, page):
             "--disable-background-networking", f"--user-data-dir={ROOT / (name + '-chrome')}",
             "--no-first-run", "--dump-dom", page.as_uri()]
     dom = run(name, args)
-    assert re.search(rb'<path[^>]*class="wave"', dom), f"Missing rendered signal path in {name}"
     if name == "cover-browser":
+        assert re.search(rb'<path[^>]*class="wave"', dom), "Missing rendered cover signal path"
         assert re.search(rb'<line[^>]*class="witness"', dom), "Missing rendered cover marker"
+    else:
+        assert b'<option value="0">audit.clk</option>' in dom, "Missing VCD signal"
+        ticks = re.findall(rb'<div class="tick[^"]*"><span title="([0-9]+)">.*?</span>'
+                           rb'<span class="bits (low|high)" title="[01]">[01]</span></div>', dom)
+        assert ticks == [(b"0", b"low"), (b"5", b"high"), (b"10", b"low")], ticks
 
 
 def main():
@@ -104,7 +109,9 @@ def main():
     if WINDOWS:
         run("native", [PROGRAM, "--qualify-native-gui", "cover-witness", EVIDENCE / "native-session.json"])
         native = json.loads((EVIDENCE / "native-session.json").read_text(encoding="utf-8"))
-        assert native
+        manifest_hash = hashlib.sha256((INSTALL / "cover-witness/manifest.json").read_bytes()).hexdigest()
+        assert native["schema"] == 2 and native["key"] == f"q3a-debug:{manifest_hash}:bounded"
+        assert native["signals"] and native["source"]["file"] and len(native["markers"]) == 1
         print("Windows native GUI smoke passed")
     cover_page = EVIDENCE / "cover-witness.html"
     cover_page.write_bytes(run("cover-html", [PROGRAM, "debug", "cover-witness"]))
