@@ -354,6 +354,15 @@ Mở `cover-witness.html` bằng trình duyệt, hoặc sao chép tệp sang má
 
 Ví dụ an toàn trả `PROVEN` và lưu chứng chỉ vào `safety-proof`. Ví dụ cover trả `COVERED`. Lệnh xác minh bundle trả `Q3A_BUNDLE_STATUS REVALIDATED` sau khi xác minh lại mô hình từ nguồn và phát lại witness. [Điều hướng waveform và phiên debug](#mở-giao-diện-debug-bốn-khung)
 
+### Kiểm thử gói Linux bằng GitHub Actions
+
+Workflow tải lại gói R17 Preview công khai, cài vào thư mục mới trên máy ảo Ubuntu 24.04 x86-64 ngoài WSL, chạy hai ví dụ ở trên và kiểm tra waveform HTML bằng trình duyệt chạy nền. Workflow dùng gói phát hành đã đóng gói và kiểm tra SHA-256 trước khi cài.
+
+1. Đăng nhập GitHub bằng tài khoản có quyền ghi vào repo. Mở tab **Actions** và chọn [Q3AFORMAL R17 Ubuntu Release Audit](https://github.com/nguyenquanicd/Q3AFORMAL/actions/workflows/r17-ubuntu-release-audit.yml).
+2. Bấm **Run workflow**, chọn nhánh `main`, rồi bấm **Run workflow** lần nữa. Workflow dùng sẵn release `r17-preview`. Có thể bấm lại để tạo lượt chạy mới.
+3. Mở lượt chạy mới trong danh sách. Chọn job **Verify public R17 assets on Ubuntu 24.04 x86-64** để xem từng bước và log.
+4. Khi lượt chạy kết thúc, mở **Summary**, cuộn đến **Artifacts** và tải `r17-release-audit-ubuntu-24.04`. Giải nén tệp ZIP, đọc `verdict.json` để xem kết quả, rồi mở `cover-witness.html` và `input.html` trong trình duyệt để xem waveform cover và VCD. ZIP cũng chứa `input.vcd` cùng log đầu ra. Nếu một bước thất bại, mở log của bước đó và tải bằng chứng đã thu được nếu có.
+
 ### Build từ mã nguồn
 
 Để build trên Windows, dùng PowerShell 7 và MinGW-w64 hỗ trợ C++17. Từ thư mục `q3aformal` trong repo, chạy `.\prototype\source\source_manager\build.ps1` và `.\prototype\checker\build.ps1`. Nếu `g++.exe` nằm ngoài `PATH`, truyền tùy chọn `-Compiler '<path-to-g++.exe>'`. Để build và chạy hồi quy trên Linux, dùng CMake 3.20 trở lên, trình biên dịch C++17 và Python 3. [Build trên Windows](../README.md#windows-build-from-source) · [Build trên Linux](docs/linux.md#build-and-validate)

@@ -1,0 +1,25 @@
+name: Q3AFORMAL R17 Ubuntu Release Audit
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    name: Verify public R17 assets on Ubuntu 24.04 x86-64
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Download, install, prove and render
+        run: python3 q3aformal/prototype/tests/audit_r17_linux_release.py
+      - name: Upload release audit evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: r17-release-audit-ubuntu-24.04
+          path: r17-audit/evidence/
