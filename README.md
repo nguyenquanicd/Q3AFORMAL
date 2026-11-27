@@ -106,6 +106,10 @@ The `Development` flag names are part of the build interface. The R16 qualificat
 
 Follow the [Linux build, packaging and execution guide](q3aformal/docs/linux.md). Linux uses the command-line proof engines and the offline HTML waveform viewer. The existing R16 Windows qualification applies to the published Windows package.
 
+## macOS build and installation
+
+The macOS development build targets macOS 15 on Apple silicon and Intel. Build and run the shared regression with CMake, or use the package generated for your architecture by the macOS workflow. The installer selects the archive automatically. Use the offline HTML waveform viewer on macOS. [macOS guide](q3aformal/docs/macos.md) · [macOS qualification workflow](https://github.com/nguyenquanicd/Q3AFORMAL/actions/workflows/macos-cli.yml)
+
 ## Repository layout
 
 | Path | Contents |

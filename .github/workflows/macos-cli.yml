@@ -1,0 +1,55 @@
+name: macOS CLI qualification
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [codex/macos-support]
+
+permissions:
+  contents: read
+
+jobs:
+  qualify:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-15
+            architecture: arm64
+            package_architecture: arm64
+          - runner: macos-15-intel
+            architecture: x86_64
+            package_architecture: x64
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Build and run shared formal regressions
+        run: |
+          set -euo pipefail
+          sw_vers
+          test "$(uname -m)" = "${{ matrix.architecture }}"
+          cmake -S q3aformal -B build-macos -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_DEPLOYMENT_TARGET=15.0 -DCMAKE_CXX_FLAGS_RELEASE="-O2 -DNDEBUG"
+          cmake --build build-macos --parallel 3
+          ctest --test-dir build-macos --output-on-failure
+      - name: Package, install and test the shipped executables
+        run: |
+          set -euo pipefail
+          package=q3aformal-macos-${{ matrix.package_architecture }}.tar.gz
+          cpack --config build-macos/CPackConfig.cmake -B packaged
+          mkdir -p distribution
+          cp "packaged/$package" install.py distribution/
+          (
+            cd distribution
+            shasum -a 256 "$package" > INSTALL_SHA256SUMS
+            python3 install.py --prefix "$RUNNER_TEMP/q3aformal"
+          )
+          file "$RUNNER_TEMP/q3aformal/prototype/bin/q3aformal-sourcecheck" | grep -F "${{ matrix.architecture }}"
+          python3 q3aformal/prototype/tests/test_linux_cli.py "$RUNNER_TEMP/q3aformal/prototype/bin/q3aformal-sourcecheck" "$RUNNER_TEMP/q3aformal/prototype/bin/q3aformal-proofcheck"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: q3aformal-macos-${{ matrix.package_architecture }}
+          path: distribution/
+          if-no-files-found: error

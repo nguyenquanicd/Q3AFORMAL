@@ -1,4 +1,4 @@
-"""Linux command-line regression using the published RTL fixtures."""
+"""Unix command-line regression using the published RTL fixtures."""
 
 from hashlib import sha256
 from pathlib import Path
@@ -154,10 +154,10 @@ endmodule
     assert failed["model_sha256"] == fair["model_sha256"]
 
 
-with tempfile.TemporaryDirectory(prefix="q3a-linux-Đồng-") as scratch:
+with tempfile.TemporaryDirectory(prefix="q3a-unix-Đồng-") as scratch:
     root = Path(scratch)
     assert len(claim("--version", cwd=root)["build_id"]) == 64
     baseline(root)
     subsystem(root)
     extended(root)
-print("Linux CLI proof, DRAT, replay, HTML, limits frozen subsystem workloads and extended profiles passed.")
+print("Unix CLI proof, DRAT, replay, HTML, limits frozen subsystem workloads and extended profiles passed.")

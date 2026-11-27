@@ -22,7 +22,13 @@ DEFAULT_ASSETS = SCRIPT_DIR if (SCRIPT_DIR / "INSTALL_SHA256SUMS").is_file() els
 
 
 def select_archive(system, machine):
-    if system not in ASSETS or machine.lower() not in {"amd64", "x86_64"}:
+    machine = machine.lower()
+    if system == "Darwin":
+        if machine in {"arm64", "aarch64"}:
+            return "q3aformal-macos-arm64.tar.gz"
+        if machine in {"amd64", "x86_64"}:
+            return "q3aformal-macos-x64.tar.gz"
+    if system not in ASSETS or machine not in {"amd64", "x86_64"}:
         raise ValueError(f"No qualified package is available for {system} {machine}")
     return ASSETS[system]
 
@@ -48,7 +54,7 @@ def extract(archive, filename, destination, system):
             if name in (".", "./") and not is_zip and member.isdir():
                 continue
             path = checked_path(name)
-            key = path.as_posix().casefold() if system == "Windows" else path.as_posix()
+            key = path.as_posix().casefold() if system in {"Windows", "Darwin"} else path.as_posix()
             if key in seen:
                 raise ValueError(f"Duplicate archive path {name!r}")
             seen.add(key)
@@ -70,7 +76,7 @@ def extract(archive, filename, destination, system):
         executable = destination / "prototype/bin" / (name + suffix)
         if not executable.is_file():
             raise ValueError(f"Missing executable {executable.name}")
-        if system == "Linux":
+        if system != "Windows":
             executable.chmod(0o755)
 
 
