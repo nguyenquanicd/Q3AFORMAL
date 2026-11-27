@@ -1,14 +1,14 @@
-# Q3AFormal User Guide
+# Q3AFORMAL R17 Preview User Guide
 
 ## 1. Mục đích và trạng thái hiện tại
 
-Q3AFormal r16 đã nghiệm thu đủ Phase 0 đến Phase 3 theo phạm vi được duyệt trên Windows x64. Giải nén r16 để chạy kiểm chứng và đọc bằng chứng. [Tải gói r16](dist/q3aformal-windows-x64-development-preview-r16.zip) · [Hồ sơ nghiệm thu](evidence/r16/release-acceptance.json)
+Q3AFORMAL R17 Preview có gói cho Ubuntu 24.04 x86-64 và Windows x64. Gói Windows là bản R16 đã nghiệm thu Phase 0 đến Phase 3 theo phạm vi Windows. Gói Linux đã qua hồi quy dòng lệnh và 15 lượt benchmark Phase 2 trên máy ảo Ubuntu 24.04 ngoài Windows Subsystem for Linux (WSL). [Release R17 Preview](https://github.com/nguyenquanicd/Q3AFORMAL/releases/tag/r17-preview) · [Nghiệm thu Linux](https://github.com/nguyenquanicd/Q3AFORMAL/actions/runs/46002227798) · [Nghiệm thu Windows R16](evidence/r16/release-acceptance.json)
+
+Bắt đầu tại [Cài đặt](#3-cài-đặt-và-build) và [Chạy thử và xem waveform](#chạy-thử-và-xem-waveform). Các ví dụ chuyên sâu dùng cú pháp PowerShell. Trên Linux, dùng `./prototype/bin/q3aformal-sourcecheck` với các lệnh dòng lệnh tương ứng.
 
 Q3AFormal đọc mã RTL SystemVerilog và thuộc tính SystemVerilog Assertions (SVA) trong phạm vi một clock cạnh lên và dữ liệu hai giá trị. Ba chế độ kiểm chứng gồm Bounded Model Checking (BMC), k-induction và Property Directed Reachability (PDR). Công cụ phát lại phản ví dụ và cover witness trước khi công bố. Chứng minh k-induction và PDR đi kèm bằng chứng Deletion Resolution Asymmetric Tautology (DRAT). Các giới hạn ngữ nghĩa và giới hạn riêng từng engine nằm trong hồ sơ Phase 1. [Phạm vi Phase 1](specs/003-phase1-block-mvp/plan.md#supported-phase-1-language-profile)
 
 Profile cơ sở `Q3A-P0-R0.9.1` quy định các cấu trúc RTL/SVA và ràng buộc cổng module phải khớp độ rộng. Ma trận bổ sung ghi phạm vi kiểm thử của manifest phiên bản 2, tiền xử lý, liên kết thuộc tính và các dạng timing hữu hạn. [Ma trận cơ sở](prototype/corpus/conformance-matrix.csv) · [Ma trận bổ sung Phase 1](prototype/corpus/phase1-conformance-additions.csv)
-
-Gói Windows thử nghiệm r15 giảm thời gian chọn biến SAT trước xung đột đầu tiên và giữ mức bộ nhớ đã kiểm chứng ở r14 cho ca cover 300 bước. Bản giải nén đạt 118 bộ hồi quy, 38 bộ kiểm thử profile, sáu bộ kiểm thử ứng dụng, sáu bộ kiểm thử chuyên biệt Phase 2 và các ca tương thích đã duyệt của Phase 0 và Phase 1. [Tải bản r15](dist/q3aformal-windows-x64-development-preview-r15.zip) · [Hồ sơ kiểm thử](evidence/r15/qualification.json)
 
 ### Độ rộng và dấu của hằng số
 
@@ -155,9 +155,9 @@ job faulty bmc p_hold 8 30000 param DROP_STALL 1
 
 Chạy bằng `prove-batch`. Báo cáo giữ giá trị khai báo và giá trị thực tế giải quyết được cho từng job. Khi tiếp tục batch, công cụ dựng lại đúng cấu hình trước khi kiểm tra bằng chứng. Kết luận chỉ áp dụng cho các cấu hình liệt kê trong kế hoạch. [Hợp đồng quét tham số](specs/005-phase3-profile-expansion/parameter-sweep.md) · [Bằng chứng Windows](evidence/r-p3-sweep/qualification.json)
 
-### Bản thử nghiệm Windows tích hợp
+### Các profile trong R17 Preview
 
-Giải nén ZIP Windows x64 để dùng chung bản build có các profile phát triển đã đóng gói. Chọn lệnh riêng cho kiểm tra bộ nhớ chính xác, lịch cạnh đa clock, các hàm lấy mẫu, assertion phản hồi cuối cùng hoặc kiểm chứng bốn trạng thái. Manifest của gói ghi kênh phát hành `development-preview` và mã băm của từng tệp. [Bản thử nghiệm Windows x64 r16](dist/q3aformal-windows-x64-development-preview-r16.zip) · [Lệnh chạy từng profile](docs/windows-development-preview.md)
+Hai gói cung cấp lệnh dòng lệnh cho bộ nhớ đồng bộ một clock, lịch cạnh đa clock, hàm lấy mẫu, thuộc tính liveness và logic bốn trạng thái theo phạm vi đã công bố. Giao diện waveform native chạy trên Windows. Cả hai nền tảng đều có thể tạo waveform HTML ngoại tuyến. [Gói phát hành](https://github.com/nguyenquanicd/Q3AFORMAL/releases/tag/r17-preview) · [Lệnh theo profile](docs/windows-development-preview.md)
 
 ### Đánh giá RTL tổ hợp với bốn trạng thái
 
@@ -271,7 +271,7 @@ Trên Windows, chạy `q3aformal-sourcecheck.exe gui <bundle-directory>` để m
 
 Với witness của k-induction, dùng `gui <bundle-directory> --obligation base` hoặc `gui <bundle-directory> --obligation step` để chọn phần bằng chứng cần xem. Có thể truyền `--group LABEL SIGNAL` nhiều lần để tạo nhóm tín hiệu khi mở cửa sổ. Dùng `--reset SIGNAL high|low` để tô các khoảng reset đang có hiệu lực, kể cả khi tín hiệu reset không nằm trong nhóm đang hiển thị.
 
-Chạy `debug <bundle-directory>` và lưu đầu ra thành HTML để mở trang offline. Trang mở tại mẫu witness và liên kết tín hiệu với dòng nguồn trong bundle. Đính kèm tệp `.q3atrace` để xem thêm mẫu hoặc tín hiệu. Có thể lưu và khôi phục phiên debug cho cùng bundle. [Cú pháp và phạm vi trình debug](specs/003-phase1-block-mvp/plan.md#four-panel-debug-view)
+Trên Windows và Linux, chạy `debug <bundle-directory>` và lưu đầu ra thành HTML để mở trang offline. Trang mở tại mẫu witness và liên kết tín hiệu với dòng nguồn trong bundle. Đính kèm tệp `.q3atrace` để xem thêm mẫu hoặc tín hiệu. Có thể lưu và khôi phục phiên debug cho cùng bundle. [Cú pháp và phạm vi trình debug](specs/003-phase1-block-mvp/plan.md#four-panel-debug-view)
 
 Dùng **Previous change** và **Next change** để tới mẫu gần nhất có tín hiệu đang chọn đổi giá trị.
 
@@ -281,61 +281,82 @@ Thêm `--reset SIGNAL high|low` để tô vùng reset có hiệu lực theo cự
 
 Dùng hai nút mũi tên để dịch cửa sổ hiển thị và giữ nguyên con trỏ. **Zoom (frames)** chọn 16, 32 hoặc 64 mẫu trong cửa sổ. **Mark cursor** đánh dấu mẫu hiện tại. Dùng **Go to marker** hoặc **Remove marker** để mở hoặc xóa mốc đã chọn. **Save session** lưu marker, vị trí cửa sổ, con trỏ, nhóm và tín hiệu cho cùng bundle. Khi mở lại phiên, đính kèm tệp `.q3atrace` nếu cửa sổ nằm ngoài phần waveform đã nhúng.
 
-## 2. Yêu cầu môi trường Windows
+## 2. Yêu cầu môi trường
 
-- Windows x64.
-- MinGW-w64 với `g++` hỗ trợ C++17 để build từ mã nguồn.
-- Windows CNG/BCrypt system library; Windows cung cấp thư viện này và build script liên kết bằng `-lbcrypt`.
-- PowerShell.
-- Build Windows mặc định liên kết tĩnh thư viện C++ của bộ biên dịch. Các executable đã qua kiểm tra có thể chạy với `PATH` chỉ chứa thư mục hệ thống Windows. [Kiểm tra phụ thuộc khi chạy](prototype/benchmark/README.md#windows-runtime-audit)
+| Hệ điều hành | Môi trường chạy bản đóng gói | Xem waveform |
+| --- | --- | --- |
+| Windows x64 | PowerShell và Python 3 nếu dùng trình cài đặt | Cửa sổ native bằng `gui` hoặc HTML ngoại tuyến |
+| Ubuntu 24.04 x86-64 | Thư viện hệ thống GNU C/C++ và Python 3 nếu dùng trình cài đặt | HTML ngoại tuyến trong trình duyệt |
 
-Không cần cài SAT solver bên thứ ba. SAT core hiện được viết trong repository.
+Gói phát hành tích hợp bộ giải Boolean satisfiability (SAT). Tùy chọn build từ mã nguồn cần trình biên dịch C++17. Trên Linux, hỗ trợ đã được xác minh cho Ubuntu 24.04 x86-64.
 
-## 3. Build và cài đặt
+## 3. Cài đặt và build
 
-Bản thử nghiệm r16 đã qua kiểm tra giải nén và chạy từ thư mục có dấu tiếng Việt, kể cả đường dẫn dự án và đầu ra. Tám ca xác minh bao gồm tạo và kiểm tra chứng chỉ, phát lại witness bốn trạng thái và nhập VCD. Bản r16 đã vượt 119 bộ hồi quy, gồm một bộ đạt khi chạy lại riêng sau khi máy chạm ngưỡng dự phòng RAM. [Kết quả hồi quy](evidence/r16/qualification.json) [Tải bản r16](dist/q3aformal-windows-x64-development-preview-r16.zip) · [Kết quả kiểm tra cài đặt](evidence/r16/portable-install-qualification.json)
+### Cài đặt bằng trình cài tự nhận diện hệ điều hành
 
-Khi chạy bản thử nghiệm r15, dùng đường dẫn chỉ chứa ký tự ASCII cho thư mục giải nén, dự án và đầu ra. Bản r15 có thể dừng khi nhận đường dẫn có dấu tiếng Việt. [Kết quả tái hiện](evidence/r16/unicode-cli-r15-reproduction.txt)
+1. Tải [install.py](https://github.com/nguyenquanicd/Q3AFORMAL/releases/download/r17-preview/install.py) và [INSTALL_SHA256SUMS](https://github.com/nguyenquanicd/Q3AFORMAL/releases/download/r17-preview/INSTALL_SHA256SUMS) từ [R17 Preview](https://github.com/nguyenquanicd/Q3AFORMAL/releases/tag/r17-preview).
+2. Tải [ZIP Windows x64](https://github.com/nguyenquanicd/Q3AFORMAL/releases/download/r17-preview/q3aformal-windows-x64-development-preview-r16.zip) hoặc [gói Ubuntu 24.04 x86-64](https://github.com/nguyenquanicd/Q3AFORMAL/releases/download/r17-preview/q3aformal-linux-x64.tar.gz) vào cùng thư mục với hai tệp trên. Tên ZIP Windows có hậu tố `r16` vì R17 Preview sử dụng đúng gói Windows R16 đã nghiệm thu.
+3. Mở terminal tại thư mục tải về và chạy lệnh phù hợp. Trình cài đặt nhận diện hệ điều hành và kiến trúc, kiểm tra mã băm SHA‑256 rồi giải nén.
 
-Gói Windows x64 nội bộ mới nhất đã qua kiểm tra sau khi giải nén, gồm kết quả PDR kèm định danh chứng chỉ, kiểm tra DRAT độc lập và tạo trang xem VCD ngoài. Giải nén vào thư mục có quyền ghi, mở PowerShell tại đó và làm theo `README.md` trong gói. Hai executable chạy trực tiếp. [Gói Windows x64](dist/q3aformal-phase1-windows-x64-native-dialog-candidate.zip) · [Hướng dẫn trong gói](docs/windows-package.md)
+**Windows PowerShell**
 
-Từ repository, kiểm tra danh mục và mã băm của từng tệp trong ZIP bằng lệnh sau. Có thể đối chiếu mã băm ZIP với hồ sơ kiểm thử phát hành.
+~~~powershell
+python install.py
+~~~
 
-```powershell
-.\scripts\package_windows.ps1 -Archive dist/q3aformal-phase1-windows-x64-native-dialog-candidate.zip -VerifyOnly
-```
+Nếu dùng Python Launcher, có thể chạy `py -3 install.py`.
 
-Khi build từ mã nguồn, executable được tạo tại `prototype/bin/`.
+**Linux**
 
-Mở PowerShell tại thư mục `q3aformal` của repository và chạy build script:
+~~~sh
+python3 install.py
+~~~
 
-```powershell
-.\prototype\source\source_manager\build.ps1
-```
+Windows mặc định cài vào `%LOCALAPPDATA%\Q3AFORMAL`. Linux mặc định cài vào `~/.local/opt/q3aformal`. Dùng `--prefix PATH` để chọn thư mục đích mới hoặc `--assets-dir PATH` để chỉ định nơi chứa các tệp tải về. Nếu thư mục đích đã tồn tại, hãy chọn một thư mục mới.
 
-Nếu `g++.exe` không nằm trong `PATH`, truyền đường dẫn compiler:
+### Cài thủ công
 
-```powershell
-.\prototype\source\source_manager\build.ps1 -Compiler '<path-to-g++.exe>'
-```
+Đối chiếu SHA‑256 với dòng tương ứng trong `INSTALL_SHA256SUMS`. Trên Windows dùng `Get-FileHash -Algorithm SHA256` rồi `Expand-Archive`. Trên Linux dùng `sha256sum` rồi `tar -xzf q3aformal-linux-x64.tar.gz -C PATH` với `PATH` là thư mục đích đã tạo. Sau khi giải nén, hai executable trong `prototype/bin` chạy trực tiếp.
 
-Nếu PowerShell chặn chạy script, có thể gọi script với execution policy cho tiến trình hiện tại:
+### Chạy thử và xem waveform
 
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\prototype\source\source_manager\build.ps1 -Compiler '<path-to-g++.exe>'
-```
+Chạy từ thư mục cài đặt hoặc thư mục đã giải nén, nơi có thư mục `prototype`. Thay đường dẫn ở dòng đầu nếu đã chọn `--prefix` hoặc giải nén thủ công. Chọn tên thư mục đầu ra mới khi chạy lại.
 
-Sau khi build thành công, executable là:
+**Windows PowerShell**
 
-```text
-prototype\bin\q3aformal-sourcecheck.exe
-```
+~~~powershell
+Set-Location "$env:LOCALAPPDATA\Q3AFORMAL"
+$q3a = '.\prototype\bin\q3aformal-sourcecheck.exe'
+& $q3a --version
+& $q3a prove prototype/pdr-pipeline.q3a --evidence-dir safety-proof
+& $q3a verify-pdr prototype/pdr-pipeline.q3a --property p_safe --evidence-dir safety-proof
+& $q3a prove prototype/pdr-cover.q3a --engine pdr --property p_hit --evidence-dir cover-proof --bundle-dir cover-witness
+& $q3a --verify-bundle cover-witness --require-source-model
+& $q3a gui cover-witness
+~~~
 
-Kiểm tra compiler có trong `PATH`:
+Cửa sổ native mở tại mẫu witness. Để tạo tệp HTML ngoại tuyến, chạy `& $q3a debug cover-witness > cover-witness.html` trong PowerShell 7.4 trở lên và mở tệp bằng trình duyệt.
 
-```powershell
-g++ --version
-```
+**Linux**
+
+~~~sh
+cd "$HOME/.local/opt/q3aformal"
+q3a=./prototype/bin/q3aformal-sourcecheck
+"$q3a" --version
+"$q3a" prove prototype/pdr-pipeline.q3a --evidence-dir safety-proof
+"$q3a" verify-pdr prototype/pdr-pipeline.q3a --property p_safe --evidence-dir safety-proof
+"$q3a" prove prototype/pdr-cover.q3a --engine pdr --property p_hit --evidence-dir cover-proof --bundle-dir cover-witness
+"$q3a" --verify-bundle cover-witness --require-source-model
+"$q3a" debug cover-witness > cover-witness.html
+~~~
+
+Mở `cover-witness.html` bằng trình duyệt, hoặc sao chép tệp sang máy có trình duyệt nếu Linux chạy qua terminal từ xa. Nếu đã có tệp Value Change Dump (VCD) riêng, dùng `& $q3a trace view-vcd input.vcd > input.html` trên PowerShell 7.4 trở lên hoặc `"$q3a" trace view-vcd input.vcd > input.html` trên Linux.
+
+Ví dụ an toàn trả `PROVEN` và lưu chứng chỉ vào `safety-proof`. Ví dụ cover trả `COVERED`. Lệnh xác minh bundle trả `Q3A_BUNDLE_STATUS REVALIDATED` sau khi xác minh lại mô hình từ nguồn và phát lại witness. [Điều hướng waveform và phiên debug](#mở-giao-diện-debug-bốn-khung)
+
+### Build từ mã nguồn
+
+Để build trên Windows, dùng PowerShell 7 và MinGW-w64 hỗ trợ C++17. Từ thư mục `q3aformal` trong repo, chạy `.\prototype\source\source_manager\build.ps1` và `.\prototype\checker\build.ps1`. Nếu `g++.exe` nằm ngoài `PATH`, truyền tùy chọn `-Compiler '<path-to-g++.exe>'`. Để build và chạy hồi quy trên Linux, dùng CMake 3.20 trở lên, trình biên dịch C++17 và Python 3. [Build trên Windows](../README.md#windows-build-from-source) · [Build trên Linux](docs/linux.md#build-and-validate)
 
 ### Thử nghiệm kiểm chứng bộ nhớ ở bản phát triển
 
@@ -757,7 +778,9 @@ Các lệnh ghi kết quả thông thường ra standard output và diagnostic r
 
 ## 10. Tài liệu liên quan
 
-- [Trạng thái sản phẩm và roadmap Phase 0](README.md)
+- [Release R17 Preview](https://github.com/nguyenquanicd/Q3AFORMAL/releases/tag/r17-preview)
+- [README của repo](../README.md)
+- [Hướng dẫn build Linux](docs/linux.md)
 - [Source manager, manifest và build](prototype/source/source_manager/README.md)
 - [Frontend subset](prototype/source/frontend/README.md)
 - [Lowering và T-IR](prototype/source/lowering/README.md)
