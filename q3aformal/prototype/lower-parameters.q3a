@@ -1,0 +1,3 @@
+Q3AFORMAL_PROJECT 1
+top parameter_localparam_vectors
+source "corpus/source-model-vectors/parameter_localparam_vectors.sv"

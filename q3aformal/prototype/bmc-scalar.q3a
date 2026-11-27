@@ -1,0 +1,3 @@
+Q3AFORMAL_PROJECT 1
+top bmc_scalar_top
+source "corpus/source-model-vectors/bmc_scalar.sv"

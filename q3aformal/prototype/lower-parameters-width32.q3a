@@ -1,0 +1,4 @@
+Q3AFORMAL_PROJECT 1
+top parameter_localparam_vectors
+parameter WIDTH 32
+source "corpus/source-model-vectors/parameter_localparam_vectors.sv"

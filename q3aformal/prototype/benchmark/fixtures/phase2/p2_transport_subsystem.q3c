@@ -1,0 +1,9 @@
+Q3AFORMAL_COMPOSITION 1
+prove p_stage0
+prove p_stage1
+cut p_stage1 lane0
+prove p_stage2
+cut p_stage2 lane1
+prove p_stage3
+cut p_stage3 lane2
+target p_subsystem p_stage0 p_stage1 p_stage2 p_stage3

@@ -1,0 +1,3 @@
+Q3AFORMAL_PROJECT 1
+top sva_assumption_consistent
+source "corpus/sva-vectors/sva_assumption_conformance.sv"

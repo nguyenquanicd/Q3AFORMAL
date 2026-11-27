@@ -1,0 +1,3 @@
+Q3AFORMAL_PROJECT 1
+top delayed_past_implication_top
+source "corpus/source-model-vectors/delayed_past_implication.sv"

@@ -1,0 +1,112 @@
+{
+  "schema": "Q3AFORMAL_PHASE0_BENCHMARK_JOBS_1",
+  "host_profile_override": {
+    "installed_memory_label": "16 GB",
+    "source": "User-reported, 2026-11-20"
+  },
+  "jobs": [
+    {
+      "id": "B-01-counter4-proven",
+      "executable": "../bin/q3aformal-sourcecheck.exe",
+      "working_directory": "../..",
+      "arguments": [
+        "--prove-inductive", "prototype/counter4.q3a",
+        "--property", "p_wraps_to_zero",
+        "--output-prefix", "{JOB_OUTPUT_DIR}/proof",
+        "--bundle-dir", "{JOB_OUTPUT_DIR}/bundle"
+      ],
+      "input_files": [
+        "../../prototype/counter4.q3a",
+        "../../prototype/corpus/source-model-vectors/counter4_pass.sv"
+      ],
+      "expected_formal_status": "PROVEN",
+      "expected_exit_code": 0
+    },
+    {
+      "id": "B-02-counter4-fail",
+      "executable": "../bin/q3aformal-sourcecheck.exe",
+      "working_directory": "../..",
+      "arguments": [
+        "--bmc", "prototype/counter4-fail.q3a",
+        "--property", "p_wraps_to_zero", "--frames", "1",
+        "--vcd", "{JOB_OUTPUT_DIR}/trace.vcd",
+        "--bundle-dir", "{JOB_OUTPUT_DIR}/bundle"
+      ],
+      "input_files": [
+        "../../prototype/counter4-fail.q3a",
+        "../../prototype/corpus/source-model-vectors/counter4_fail.sv"
+      ],
+      "expected_formal_status": "BOUNDED_FAIL",
+      "expected_exit_code": 0
+    },
+    {
+      "id": "B-03-casez-proven",
+      "executable": "../bin/q3aformal-sourcecheck.exe",
+      "working_directory": "../..",
+      "arguments": [
+        "--prove-inductive", "prototype/benchmark/fixtures/B03_casez_decode.q3a",
+        "--property", "p_casez_decode_matches_priority",
+        "--output-prefix", "{JOB_OUTPUT_DIR}/proof",
+        "--bundle-dir", "{JOB_OUTPUT_DIR}/bundle"
+      ],
+      "input_files": [
+        "fixtures/B03_casez_decode.q3a",
+        "fixtures/B03_casez_decode.sv"
+      ],
+      "expected_formal_status": "PROVEN",
+      "expected_exit_code": 0
+    },
+    {
+      "id": "B-04-handshake-cover",
+      "executable": "../bin/q3aformal-sourcecheck.exe",
+      "working_directory": "../..",
+      "arguments": [
+        "--bmc", "prototype/benchmark/fixtures/B04_handshake_cover.q3a",
+        "--property", "p_cover_transfer", "--frames", "1",
+        "--bundle-dir", "{JOB_OUTPUT_DIR}/bundle"
+      ],
+      "input_files": [
+        "fixtures/B04_handshake_cover.q3a",
+        "fixtures/B04_handshake_cover.sv"
+      ],
+      "expected_formal_status": "COVERED",
+      "expected_exit_code": 0
+    },
+    {
+      "id": "B-05a-disable-iff-reject",
+      "executable": "../bin/q3aformal-sourcecheck.exe",
+      "working_directory": "../..",
+      "arguments": ["--lower-project", "prototype/benchmark/fixtures/B05_disable_iff_reject.q3a"],
+      "input_files": ["fixtures/B05_disable_iff_reject.q3a", "fixtures/B05_disable_iff_reject.sv"],
+      "expected_exit_code": 1,
+      "expected_diagnostic_regex": "Q3A_PARSE_ERROR .*found 'iff'"
+    },
+    {
+      "id": "B-05b-multiclock-reject",
+      "executable": "../bin/q3aformal-sourcecheck.exe",
+      "working_directory": "../..",
+      "arguments": ["--lower-project", "prototype/benchmark/fixtures/B05_multiclock_reject.q3a"],
+      "input_files": ["fixtures/B05_multiclock_reject.q3a", "fixtures/B05_multiclock_reject.sv"],
+      "expected_exit_code": 1,
+      "expected_diagnostic_regex": "Q3A_PARSE_ERROR .*found '@'"
+    },
+    {
+      "id": "B-05c-unlisted-sva-reject",
+      "executable": "../bin/q3aformal-sourcecheck.exe",
+      "working_directory": "../..",
+      "arguments": ["--lower-project", "prototype/benchmark/fixtures/B05_unlisted_sva_reject.q3a"],
+      "input_files": ["fixtures/B05_unlisted_sva_reject.q3a", "fixtures/B05_unlisted_sva_reject.sv"],
+      "expected_exit_code": 1,
+      "expected_diagnostic_regex": "Q3A_PARSE_ERROR .*unsupported system function \\$rose"
+    },
+    {
+      "id": "B-05d-xz-data-reject",
+      "executable": "../bin/q3aformal-sourcecheck.exe",
+      "working_directory": "../..",
+      "arguments": ["--lower-project", "prototype/benchmark/fixtures/B05_xz_data_reject.q3a"],
+      "input_files": ["fixtures/B05_xz_data_reject.q3a", "fixtures/B05_xz_data_reject.sv"],
+      "expected_exit_code": 1,
+      "expected_diagnostic_regex": "Q3A_PARSE_ERROR .*X/Z data and wildcard digits are allowed only as static casez patterns"
+    }
+  ]
+}

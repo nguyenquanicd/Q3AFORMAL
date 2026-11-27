@@ -1,0 +1,47 @@
+{
+  "status": "PORTABLE_WINDOWS_INSTALL_VERIFIED",
+  "archive_sha256": "059e02899b7c3e0e8f8b34afbeee6d929160ee9e55912109ed07d3b737c62a31",
+  "build_id": "e1d982882e595020534d4b3a45a7cbecd68ec72e6dee835209f2c123a5908bdf",
+  "executables": {
+    "q3aformal-sourcecheck.exe": "9a00aacadb036186a7af212f607dedecf70263f983f583cbc0649cf1cc63fe8c",
+    "q3aformal-proofcheck.exe": "007bd79d58f7e2c128911f2f4307fb79666956182b251b0ea93630d38c82a14a"
+  },
+  "archive_files": 19,
+  "package_channel": "development-preview",
+  "scope": "Same Windows host with clean extraction, Unicode and spaces in install and workspace paths, and system-only PATH. The archived benchmarks and Windows import inventory remain separate.",
+  "checks": {
+    "version_from_separate_directory": {
+      "exit_code": 0,
+      "status": null
+    },
+    "help_from_install_directory": {
+      "exit_code": 0,
+      "status": "TEXT_VALIDATED"
+    },
+    "baseline_pdr": {
+      "exit_code": 0,
+      "status": "PROVEN"
+    },
+    "baseline_pdr_reopen": {
+      "exit_code": 0,
+      "status": "CERTIFICATE_VERIFIED"
+    },
+    "standalone_drat": {
+      "exit_code": 0,
+      "status": "ACCEPTED"
+    },
+    "four_state_cover": {
+      "exit_code": 0,
+      "status": "COVERED"
+    },
+    "four_state_cover_reopen": {
+      "exit_code": 0,
+      "status": "COVERED",
+      "vcd_sha256": "e298b960eb6d97e889449048c3d3611de09367c58e6300d285e99bdb623dfd10"
+    },
+    "vcd_import": {
+      "exit_code": 0,
+      "status": "PARSED"
+    }
+  }
+}

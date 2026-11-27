@@ -1,0 +1,3 @@
+Q3AFORMAL_PROJECT 1
+top rtl_packed_type_boundaries
+source "corpus/source-model-vectors/rtl_packed_type_boundaries.sv"

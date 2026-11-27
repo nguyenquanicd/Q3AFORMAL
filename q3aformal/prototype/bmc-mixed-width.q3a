@@ -1,0 +1,3 @@
+Q3AFORMAL_PROJECT 1
+top bmc_mixed_width_top
+source "corpus/source-model-vectors/bmc_mixed_width.sv"

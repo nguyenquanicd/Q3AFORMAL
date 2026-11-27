@@ -1,0 +1,3 @@
+Q3AFORMAL_PROJECT 1
+top sva_past_two_reset
+source "corpus/sva-vectors/sva_past_two_reset.sv"

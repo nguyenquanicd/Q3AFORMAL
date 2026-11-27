@@ -1,0 +1,70 @@
+{
+  "schema": "Q3AFORMAL_PHASE1_DEBUG_LIMIT_PROPOSAL_1",
+  "approval_status": "PROPOSED",
+  "owner_decision": "OD-07",
+  "criteria": [
+    "AC-10",
+    "AC-12"
+  ],
+  "host": {
+    "architecture": "AMD64",
+    "cpu_model": "AMD Ryzen 7 7445HS w/ Radeon 740M Graphics",
+    "installed_memory_label": "16 GB"
+  },
+  "repetitions_per_workload": 3,
+  "evaluation": "Every repetition must meet the limit. Retain failures and missing samples.",
+  "workloads": [
+    {
+      "id": "P1-D01-verified-elastic-witness",
+      "frames": 321,
+      "signals": 19,
+      "visible_lanes": 16,
+      "input_files": [
+        {
+          "path": "prototype/benchmark/fixtures/P1_elastic_pipeline.q3a",
+          "sha256": "0070129907dd346e406dc530cb6f9ce84a883421c4819eb5be3eaee3b3ea353d"
+        },
+        {
+          "path": "prototype/benchmark/fixtures/P1_elastic_pipeline.sv",
+          "sha256": "76db47386b501adc5cfae05cf3331f9258828fec82bd857b06a3faf487adf867"
+        },
+        {
+          "path": "evidence/benchmark/runs/phase1-debug-elastic-replay-2026-11-25/viewport-workload.json",
+          "sha256": "1fa3ecfb1475b5aba2a06cc158e07165d8fa2ea8052353d64dc84a1773236516"
+        }
+      ],
+      "first_witness_sample": 320,
+      "source_required": true
+    },
+    {
+      "id": "P1-D02-indexed-trace-stress",
+      "frames": 10001,
+      "signals": 384,
+      "visible_lanes": 16,
+      "generator": "prototype/benchmark/large_trace_fixture.cpp",
+      "generator_sha256": "780c8935b5cdba5931a1395faebb3e8cbf3a39b6e4103f5e11d198874ac8e4b0",
+      "source_required": false,
+      "purpose": "Synthetic viewport and indexing stress"
+    }
+  ],
+  "limits": {
+    "initial_visible_ms": 3000,
+    "cold_indexed_viewport_ms": 500,
+    "adjacent_cached_viewport_ms": 150,
+    "peak_gui_working_set_bytes": 805306368
+  },
+  "measurement_points": {
+    "initial_visible_ms": "From new GUI session request until the initial viewport is usable",
+    "cold_indexed_viewport_ms": "From requesting a previously unread time window until the selected signal values are displayed",
+    "adjacent_cached_viewport_ms": "From requesting the adjacent cached window until selected values are shown",
+    "peak_gui_working_set_bytes": "Maximum contemporaneous sum of the isolated session process tree working sets"
+  },
+  "retained_evidence": [
+    "package and source hashes",
+    "OS build and GUI runtime version",
+    "counter sampling interval",
+    "raw timings, measured working set, and per-repeat verdict",
+    "checked value and source locations",
+    "native interaction transcript including cursor, source cross-probe, and session restore"
+  ]
+}

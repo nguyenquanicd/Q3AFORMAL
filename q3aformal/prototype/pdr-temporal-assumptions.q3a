@@ -1,0 +1,7 @@
+Q3AFORMAL_PROJECT 2
+top pdr_temporal_assumptions
+source systemverilog "corpus/source-model-vectors/pdr_temporal_assumptions.sv"
+option profile Q3A-P0-R0.9.1
+option engine pdr
+option depth 12
+option property p_local

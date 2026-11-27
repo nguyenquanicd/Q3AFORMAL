@@ -1,0 +1,4 @@
+Q3AFORMAL_PROJECT 1
+top rtl_parameter_initializer_types
+parameter TOP_VALUE (3'sb110|4'd0)+4'd0
+source "corpus/source-model-vectors/rtl_parameter_initializer_types.sv"

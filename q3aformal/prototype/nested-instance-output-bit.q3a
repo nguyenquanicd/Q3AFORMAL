@@ -1,0 +1,3 @@
+Q3AFORMAL_PROJECT 1
+top nested_instance_output_bit_top
+source "corpus/source-model-vectors/nested_instance_output_bit.sv"

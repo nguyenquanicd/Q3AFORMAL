@@ -1,0 +1,3 @@
+Q3AFORMAL_PROJECT 1
+top generated_localparam_negative_top
+source "corpus/source-model-vectors/generated_scalar_declaration.sv"

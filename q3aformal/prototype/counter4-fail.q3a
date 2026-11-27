@@ -1,0 +1,3 @@
+Q3AFORMAL_PROJECT 1
+top counter4_fail
+source "corpus/source-model-vectors/counter4_fail.sv"

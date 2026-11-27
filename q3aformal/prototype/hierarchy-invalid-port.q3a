@@ -1,0 +1,4 @@
+Q3AFORMAL_PROJECT 1
+top invalid_named_port_reject
+source "corpus/source-model-vectors/hierarchy_vectors.sv"
+source "corpus/source-model-vectors/negative-vectors/invalid_named_port_reject.sv"

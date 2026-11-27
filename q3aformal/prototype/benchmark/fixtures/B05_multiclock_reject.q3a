@@ -1,0 +1,3 @@
+Q3AFORMAL_PROJECT 1
+top multiclock_reject_bench
+source "B05_multiclock_reject.sv"

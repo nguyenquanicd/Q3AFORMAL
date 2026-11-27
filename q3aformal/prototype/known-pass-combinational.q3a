@@ -1,0 +1,3 @@
+Q3AFORMAL_PROJECT 1
+top known_pass_top
+source "corpus/proof-vectors/known_pass_combinational.sv"

@@ -1,0 +1,89 @@
+{
+  "schema": "Q3AFORMAL_PHASE2_SUBSYSTEM_WORKLOADS_1",
+  "scope": "Single-clock Phase 2 transport subsystem, four 8-bit stages",
+  "fixture_sha256": {
+    "p2_transport_encoded.q3a": "3a6a249f95660adb6d3e4d8cf53e3bdd45ec85149b1071d27f0bb8421874c203",
+    "p2_transport_encoded.sv": "3f4ed42f5a6a9a03bf5035114f39eaaa581cc2d5cf1ef9ab64f463bea307b519",
+    "p2_transport_equivalence.q3e": "d5655a83996cc5d87914b59eca4e8edc20bff0e0a93c4fdc737f2e048f3c7b7f",
+    "p2_transport_subsystem.q3a": "4f3511139b9b05f93d8b04526385133286b1a6533b6a8ad9714d6b046c118cdd",
+    "p2_transport_subsystem.q3b": "edca88bb4cfa05830ac465e998cc6bdd32f5590f8afc403aa50ee09d338b0768",
+    "p2_transport_subsystem.q3c": "5936511a3b77edc093f20f8f93e3427868d4ab88a8b2d249290f8860fa3b761a",
+    "p2_transport_subsystem.sv": "e5c080b39fd07b5fbca635df80440ea277bbeff163dc64348ac773f174166f60"
+  },
+  "transport_model_sha256": "27e197c14a1332388dc2c4a27e199a24f1e94a73741cb85aaa40109881d34354",
+  "workloads": [
+    {
+      "id": "monolithic",
+      "arguments": [
+        "prove",
+        "{FIXTURES}/p2_transport_subsystem.q3a",
+        "--engine",
+        "induction",
+        "--property",
+        "p_subsystem",
+        "--k",
+        "1",
+        "--output-prefix",
+        "{OUTPUT}/proof",
+        "--bundle-dir",
+        "{OUTPUT}/bundle"
+      ],
+      "expected_status": "PROVEN"
+    },
+    {
+      "id": "composed",
+      "arguments": [
+        "prove-composition",
+        "{FIXTURES}/p2_transport_subsystem.q3a",
+        "--plan",
+        "{FIXTURES}/p2_transport_subsystem.q3c",
+        "--output-dir",
+        "{OUTPUT}/composition"
+      ],
+      "expected_status": "PROVEN"
+    },
+    {
+      "id": "sequential-batch",
+      "arguments": [
+        "prove-batch",
+        "{FIXTURES}/p2_transport_subsystem.q3a",
+        "--plan",
+        "{FIXTURES}/p2_transport_subsystem.q3b",
+        "--output-dir",
+        "{OUTPUT}/batch",
+        "--checkpoint",
+        "--workers",
+        "1"
+      ],
+      "expected_status": "COMPLETED"
+    },
+    {
+      "id": "parallel-batch",
+      "arguments": [
+        "prove-batch",
+        "{FIXTURES}/p2_transport_subsystem.q3a",
+        "--plan",
+        "{FIXTURES}/p2_transport_subsystem.q3b",
+        "--output-dir",
+        "{OUTPUT}/batch",
+        "--checkpoint",
+        "--workers",
+        "2"
+      ],
+      "expected_status": "COMPLETED"
+    },
+    {
+      "id": "equivalence",
+      "arguments": [
+        "check-equivalence",
+        "{FIXTURES}/p2_transport_subsystem.q3a",
+        "{FIXTURES}/p2_transport_encoded.q3a",
+        "--plan",
+        "{FIXTURES}/p2_transport_equivalence.q3e",
+        "--output-dir",
+        "{OUTPUT}/equivalence"
+      ],
+      "expected_status": "EQUIVALENT"
+    }
+  ]
+}

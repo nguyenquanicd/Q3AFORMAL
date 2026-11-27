@@ -1,0 +1,3 @@
+Q3AFORMAL_PROJECT 1
+top unlisted_sva_reject_bench
+source "B05_unlisted_sva_reject.sv"

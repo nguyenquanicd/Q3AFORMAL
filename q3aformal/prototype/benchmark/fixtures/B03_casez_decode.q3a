@@ -1,0 +1,3 @@
+Q3AFORMAL_PROJECT 1
+top casez_decode_bench
+source "B03_casez_decode.sv"

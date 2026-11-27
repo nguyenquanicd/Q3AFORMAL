@@ -1,0 +1,3 @@
+Q3AFORMAL_PROJECT 1
+top rtl_sized_literal_resize
+source "corpus/source-model-vectors/rtl_sized_literal_resize.sv"

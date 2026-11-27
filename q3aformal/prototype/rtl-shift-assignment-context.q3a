@@ -1,0 +1,3 @@
+Q3AFORMAL_PROJECT 1
+top rtl_shift_assignment_context
+source "corpus/source-model-vectors/rtl_shift_assignment_context.sv"

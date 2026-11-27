@@ -1,0 +1,3 @@
+Q3AFORMAL_PROJECT 1
+top combinational_loop_reject
+source "corpus/source-model-vectors/negative-vectors/combinational_loop_reject.sv"

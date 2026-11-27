@@ -1,0 +1,38 @@
+{
+  "schema": "Q3AFORMAL_PHASE1_BENCHMARK_JOBS_1",
+  "host_profile_override": {
+    "installed_memory_label": "16 GB",
+    "source": "User-reported, 2026-11-20"
+  },
+  "jobs": [
+    {
+      "id": "fifo-32-pdr",
+      "executable": "../bin/q3aformal-sourcecheck.exe",
+      "working_directory": "../..",
+      "arguments": [
+        "prove",
+        "prototype/benchmark/fixtures/P1_fifo_contract.q3a",
+        "--parameter",
+        "DATA_WIDTH",
+        "32",
+        "--timeout-ms",
+        "60000",
+        "--engine",
+        "pdr",
+        "--property",
+        "p_step",
+        "--max-depth",
+        "12",
+        "--evidence-dir",
+        "{JOB_OUTPUT_DIR}/certificate",
+        "--max-queries",
+        "50000"
+      ],
+      "input_files": [
+        "fixtures/P1_fifo_contract.q3a",
+        "fixtures/P1_fifo_contract.sv"
+      ],
+      "timeout_seconds": 65
+    }
+  ]
+}

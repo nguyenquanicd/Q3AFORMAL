@@ -1,0 +1,9 @@
+Q3AFORMAL_EQUIVALENCE 1
+clock clk clock
+input data_in value
+output data_out result
+initial matched
+state lane0 enc0 invert
+state lane1 enc1 invert
+state lane2 enc2 invert
+state data_out enc3 invert

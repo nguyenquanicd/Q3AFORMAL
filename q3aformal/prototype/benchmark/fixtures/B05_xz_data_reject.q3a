@@ -1,0 +1,3 @@
+Q3AFORMAL_PROJECT 1
+top xz_data_reject_bench
+source "B05_xz_data_reject.sv"

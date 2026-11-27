@@ -1,0 +1,6 @@
+Q3AFORMAL_BATCH 2
+memory_mib 512
+job stage0 induction p_stage0 1 30000
+job stage1 induction p_stage1 1 30000
+job stage2 induction p_stage2 1 30000
+job stage3 induction p_stage3 1 30000

@@ -1,0 +1,7 @@
+Q3AFORMAL_PROJECT 2
+top pdr_cone_environment
+source systemverilog "p1_pdr_cone_environment.sv"
+option profile Q3A-P0-R0.9.1
+option engine pdr
+option depth 12
+option property p_quiet

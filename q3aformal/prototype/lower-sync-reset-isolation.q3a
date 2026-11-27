@@ -1,0 +1,3 @@
+Q3AFORMAL_PROJECT 1
+top sync_reset_isolation
+source "corpus/source-model-vectors/sync_reset_isolation.sv"

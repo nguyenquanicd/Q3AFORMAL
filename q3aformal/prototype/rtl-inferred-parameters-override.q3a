@@ -1,0 +1,4 @@
+Q3AFORMAL_PROJECT 1
+top rtl_inferred_parameters
+parameter WIDTH 5'sd4
+source "corpus/source-model-vectors/rtl_inferred_parameters.sv"

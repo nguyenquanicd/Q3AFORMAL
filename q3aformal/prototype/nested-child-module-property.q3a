@@ -1,0 +1,3 @@
+Q3AFORMAL_PROJECT 1
+top nested_child_property_top
+source "corpus/source-model-vectors/child_module_property.sv"

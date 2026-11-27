@@ -1,0 +1,40 @@
+{
+  "schema": "Q3AFORMAL_PHASE2_SUBSYSTEM_LIMITS_1",
+  "owner_decision": "OD-07",
+  "approval_status": "PROPOSED",
+  "workloads_sha256": "92e836b2e31f8575b6e3da16c9c19dae360cf0406d85d76f12c9b5d288e37c41",
+  "host": {
+    "architecture": "AMD64",
+    "cpu_model": "AMD Ryzen 7 7445HS w/ Radeon 740M Graphics",
+    "installed_memory_label": "16 GB"
+  },
+  "repetitions_per_workload": 3,
+  "sample_interval_ms": 10,
+  "acceptance": "Every isolated post-approval repeat must pass source revalidation and both resource limits",
+  "metrics": {
+    "wall_time_ms": "Process launch through exit. Proof revalidation is outside the timed run.",
+    "peak_working_set_bytes": "Maximum contemporaneous sampled process-tree working set."
+  },
+  "cases": {
+    "monolithic": {
+      "wall_time_ms": 30000,
+      "peak_working_set_bytes": 536870912
+    },
+    "composed": {
+      "wall_time_ms": 30000,
+      "peak_working_set_bytes": 536870912
+    },
+    "sequential-batch": {
+      "wall_time_ms": 30000,
+      "peak_working_set_bytes": 536870912
+    },
+    "parallel-batch": {
+      "wall_time_ms": 30000,
+      "peak_working_set_bytes": 805306368
+    },
+    "equivalence": {
+      "wall_time_ms": 30000,
+      "peak_working_set_bytes": 536870912
+    }
+  }
+}

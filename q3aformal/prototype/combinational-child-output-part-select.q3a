@@ -1,0 +1,3 @@
+Q3AFORMAL_PROJECT 1
+top combinational_part_select_direct_top
+source "corpus/source-model-vectors/combinational_child_output_part_select.sv"

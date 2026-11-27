@@ -1,0 +1,4 @@
+Q3AFORMAL_PROJECT 1
+top rtl_inferred_parameters
+parameter BODY_ALIAS 3'd6
+source "corpus/source-model-vectors/rtl_inferred_parameters.sv"

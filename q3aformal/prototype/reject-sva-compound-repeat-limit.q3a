@@ -1,0 +1,3 @@
+Q3AFORMAL_PROJECT 1
+top sva_compound_repeat_limit
+source "corpus/sva-vectors/sva_compound_repeat_limit.sv"

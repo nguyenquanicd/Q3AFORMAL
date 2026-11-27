@@ -1,0 +1,233 @@
+{
+  "schema": "Q3AFORMAL_PHASE1_BENCHMARK_JOBS_1",
+  "host_profile_override": {
+    "installed_memory_label": "16 GB",
+    "source": "User-reported, 2026-11-20"
+  },
+  "jobs": [
+    {
+      "id": "fifo-4-pdr",
+      "executable": "../bin/q3aformal-sourcecheck.exe",
+      "working_directory": "../..",
+      "arguments": [
+        "prove",
+        "prototype/benchmark/fixtures/P1_fifo_contract.q3a",
+        "--parameter",
+        "DATA_WIDTH",
+        "4",
+        "--timeout-ms",
+        "10000",
+        "--engine",
+        "pdr",
+        "--property",
+        "p_step",
+        "--max-depth",
+        "12",
+        "--evidence-dir",
+        "{JOB_OUTPUT_DIR}/certificate"
+      ],
+      "input_files": [
+        "fixtures/P1_fifo_contract.q3a",
+        "fixtures/P1_fifo_contract.sv"
+      ],
+      "timeout_seconds": 15
+    },
+    {
+      "id": "fifo-4-induction",
+      "executable": "../bin/q3aformal-sourcecheck.exe",
+      "working_directory": "../..",
+      "arguments": [
+        "prove",
+        "prototype/benchmark/fixtures/P1_fifo_contract.q3a",
+        "--parameter",
+        "DATA_WIDTH",
+        "4",
+        "--timeout-ms",
+        "10000",
+        "--engine",
+        "induction",
+        "--property",
+        "p_step",
+        "--k",
+        "2",
+        "--output-prefix",
+        "{JOB_OUTPUT_DIR}/proof",
+        "--bundle-dir",
+        "{JOB_OUTPUT_DIR}/bundle"
+      ],
+      "input_files": [
+        "fixtures/P1_fifo_contract.q3a",
+        "fixtures/P1_fifo_contract.sv"
+      ],
+      "timeout_seconds": 15
+    },
+    {
+      "id": "fifo-8-pdr",
+      "executable": "../bin/q3aformal-sourcecheck.exe",
+      "working_directory": "../..",
+      "arguments": [
+        "prove",
+        "prototype/benchmark/fixtures/P1_fifo_contract.q3a",
+        "--parameter",
+        "DATA_WIDTH",
+        "8",
+        "--timeout-ms",
+        "10000",
+        "--engine",
+        "pdr",
+        "--property",
+        "p_step",
+        "--max-depth",
+        "12",
+        "--evidence-dir",
+        "{JOB_OUTPUT_DIR}/certificate"
+      ],
+      "input_files": [
+        "fixtures/P1_fifo_contract.q3a",
+        "fixtures/P1_fifo_contract.sv"
+      ],
+      "timeout_seconds": 15
+    },
+    {
+      "id": "fifo-8-induction",
+      "executable": "../bin/q3aformal-sourcecheck.exe",
+      "working_directory": "../..",
+      "arguments": [
+        "prove",
+        "prototype/benchmark/fixtures/P1_fifo_contract.q3a",
+        "--parameter",
+        "DATA_WIDTH",
+        "8",
+        "--timeout-ms",
+        "10000",
+        "--engine",
+        "induction",
+        "--property",
+        "p_step",
+        "--k",
+        "2",
+        "--output-prefix",
+        "{JOB_OUTPUT_DIR}/proof",
+        "--bundle-dir",
+        "{JOB_OUTPUT_DIR}/bundle"
+      ],
+      "input_files": [
+        "fixtures/P1_fifo_contract.q3a",
+        "fixtures/P1_fifo_contract.sv"
+      ],
+      "timeout_seconds": 15
+    },
+    {
+      "id": "fifo-16-pdr",
+      "executable": "../bin/q3aformal-sourcecheck.exe",
+      "working_directory": "../..",
+      "arguments": [
+        "prove",
+        "prototype/benchmark/fixtures/P1_fifo_contract.q3a",
+        "--parameter",
+        "DATA_WIDTH",
+        "16",
+        "--timeout-ms",
+        "10000",
+        "--engine",
+        "pdr",
+        "--property",
+        "p_step",
+        "--max-depth",
+        "12",
+        "--evidence-dir",
+        "{JOB_OUTPUT_DIR}/certificate"
+      ],
+      "input_files": [
+        "fixtures/P1_fifo_contract.q3a",
+        "fixtures/P1_fifo_contract.sv"
+      ],
+      "timeout_seconds": 15
+    },
+    {
+      "id": "fifo-16-induction",
+      "executable": "../bin/q3aformal-sourcecheck.exe",
+      "working_directory": "../..",
+      "arguments": [
+        "prove",
+        "prototype/benchmark/fixtures/P1_fifo_contract.q3a",
+        "--parameter",
+        "DATA_WIDTH",
+        "16",
+        "--timeout-ms",
+        "10000",
+        "--engine",
+        "induction",
+        "--property",
+        "p_step",
+        "--k",
+        "2",
+        "--output-prefix",
+        "{JOB_OUTPUT_DIR}/proof",
+        "--bundle-dir",
+        "{JOB_OUTPUT_DIR}/bundle"
+      ],
+      "input_files": [
+        "fixtures/P1_fifo_contract.q3a",
+        "fixtures/P1_fifo_contract.sv"
+      ],
+      "timeout_seconds": 15
+    },
+    {
+      "id": "fifo-32-pdr",
+      "executable": "../bin/q3aformal-sourcecheck.exe",
+      "working_directory": "../..",
+      "arguments": [
+        "prove",
+        "prototype/benchmark/fixtures/P1_fifo_contract.q3a",
+        "--parameter",
+        "DATA_WIDTH",
+        "32",
+        "--timeout-ms",
+        "10000",
+        "--engine",
+        "pdr",
+        "--property",
+        "p_step",
+        "--max-depth",
+        "12",
+        "--evidence-dir",
+        "{JOB_OUTPUT_DIR}/certificate"
+      ],
+      "input_files": [
+        "fixtures/P1_fifo_contract.q3a",
+        "fixtures/P1_fifo_contract.sv"
+      ],
+      "timeout_seconds": 15
+    },
+    {
+      "id": "fifo-32-induction",
+      "executable": "../bin/q3aformal-sourcecheck.exe",
+      "working_directory": "../..",
+      "arguments": [
+        "prove",
+        "prototype/benchmark/fixtures/P1_fifo_contract.q3a",
+        "--parameter",
+        "DATA_WIDTH",
+        "32",
+        "--timeout-ms",
+        "10000",
+        "--engine",
+        "induction",
+        "--property",
+        "p_step",
+        "--k",
+        "2",
+        "--output-prefix",
+        "{JOB_OUTPUT_DIR}/proof",
+        "--bundle-dir",
+        "{JOB_OUTPUT_DIR}/bundle"
+      ],
+      "input_files": [
+        "fixtures/P1_fifo_contract.q3a",
+        "fixtures/P1_fifo_contract.sv"
+      ],
+      "timeout_seconds": 15
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+Q3AFORMAL_PROJECT 2
+top axi_lite_read_formal
+source systemverilog "read_unit.sv"
+source systemverilog "read_formal.sv"

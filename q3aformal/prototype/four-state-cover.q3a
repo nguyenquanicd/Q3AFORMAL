@@ -1,0 +1,4 @@
+Q3AFORMAL_PROJECT 2
+top four_state_cover
+source systemverilog "corpus/source-model-vectors/four_state_cover.sv"
+option profile Q3A-FOUR-STATE-DEVELOPMENT

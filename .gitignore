@@ -1,0 +1,16 @@
+# Local build products, full historical runs and user results
+/q3aformal/bin/
+/q3aformal/build/
+/q3aformal/prototype/bin/
+/q3aformal/dist/
+/q3aformal/q3aformal-results/
+/q3aformal/evidence/*
+!/q3aformal/evidence/r16/
+/q3aformal/evidence/r16/*
+!/q3aformal/evidence/r16/release-acceptance.json
+!/q3aformal/evidence/r16/portable-install-qualification.json
+!/q3aformal/evidence/r16/phase2-acceptance/
+/q3aformal/evidence/r16/phase2-acceptance/*
+!/q3aformal/evidence/r16/phase2-acceptance/verdict.json
+**/__pycache__/
+*.py[cod]

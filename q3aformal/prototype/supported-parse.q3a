@@ -1,0 +1,15 @@
+Q3AFORMAL_PROJECT 1
+top counter4_pass
+source "corpus/source-model-vectors/case_order_vectors.sv"
+source "corpus/source-model-vectors/casez_decode.sv"
+source "corpus/source-model-vectors/counter4_fail.sv"
+source "corpus/source-model-vectors/counter4_pass.sv"
+source "corpus/source-model-vectors/generate_boundary_vectors.sv"
+source "corpus/source-model-vectors/generate_vectors.sv"
+source "corpus/source-model-vectors/handshake1_entry.sv"
+source "corpus/source-model-vectors/hierarchy_vectors.sv"
+source "corpus/source-model-vectors/operator_vectors.sv"
+source "corpus/source-model-vectors/parameter_localparam_vectors.sv"
+source "corpus/source-model-vectors/rtl_literal_expression_vectors.sv"
+source "corpus/source-model-vectors/rtl_process_control_vectors.sv"
+source "corpus/sva-vectors/sva_sequence_vectors.sv"

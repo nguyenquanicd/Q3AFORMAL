@@ -1,0 +1,3 @@
+Q3AFORMAL_PROJECT 1
+top bmc_arithmetic_shifts_top
+source "corpus/source-model-vectors/bmc_arithmetic_shifts.sv"

@@ -1,0 +1,3 @@
+Q3AFORMAL_PROJECT 1
+top generated_bit_assignment_partial
+source "corpus/source-model-vectors/generated_bit_assignment_negative.sv"

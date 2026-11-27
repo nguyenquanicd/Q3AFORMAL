@@ -1,0 +1,5 @@
+Q3AFORMAL_BATCH 1
+memory_mib 1024
+job prove-safety pdr p_safe 12 30000
+job find-failure pdr p_bad 12 30000
+job bounded-safety bmc p_safe 8 30000

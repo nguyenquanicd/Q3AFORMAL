@@ -1,0 +1,3 @@
+Q3AFORMAL_PROJECT 1
+top rtl_elaboration_sized_bounds
+source "corpus/source-model-vectors/rtl_elaboration_sized_bounds.sv"

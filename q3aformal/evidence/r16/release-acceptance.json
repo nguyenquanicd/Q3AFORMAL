@@ -1,0 +1,96 @@
+{
+  "status": "ACCEPTED_FOR_APPROVED_WINDOWS_X64_SCOPE",
+  "recorded_at": "2026-11-27T00:21:56.708947+00:00",
+  "archive": "dist/q3aformal-windows-x64-development-preview-r16.zip",
+  "archive_sha256": "059e02899b7c3e0e8f8b34afbeee6d929160ee9e55912109ed07d3b737c62a31",
+  "build_id": "e1d982882e595020534d4b3a45a7cbecd68ec72e6dee835209f2c123a5908bdf",
+  "approved_scope": "Specification revision 0.10 and the source profiles adopted in the revision 16 owner decisions",
+  "specification_sha256": "6221a37a4bb772522df58ce3e14cf043687dc0ecc33b1c1cb53796e3588666dc",
+  "phases": {
+    "phase_0": "ACCEPTED",
+    "phase_1": "ACCEPTED",
+    "phase_2": "ACCEPTED",
+    "phase_3": "ACCEPTED"
+  },
+  "acceptance_progress_percent": 100,
+  "criteria": {
+    "Q3AF-AC-01": "ACCEPTED",
+    "Q3AF-AC-02": "ACCEPTED",
+    "Q3AF-AC-03": "ACCEPTED",
+    "Q3AF-AC-04": "ACCEPTED",
+    "Q3AF-AC-05": "ACCEPTED",
+    "Q3AF-AC-06": "ACCEPTED",
+    "Q3AF-AC-07": "ACCEPTED",
+    "Q3AF-AC-08": "ACCEPTED",
+    "Q3AF-AC-09": "ACCEPTED",
+    "Q3AF-AC-10": "ACCEPTED",
+    "Q3AF-AC-11": "ACCEPTED",
+    "Q3AF-AC-12": "ACCEPTED",
+    "Q3AF-AC-13": "ACCEPTED",
+    "Q3AF-AC-14": "ACCEPTED",
+    "Q3AF-AC-15": "ACCEPTED",
+    "Q3AF-AC-16": "ACCEPTED",
+    "Q3AF-AC-17": "ACCEPTED",
+    "Q3AF-AC-18": "ACCEPTED",
+    "Q3AF-AC-19": "ACCEPTED",
+    "Q3AF-AC-20": "ACCEPTED"
+  },
+  "phase2_benchmark": {
+    "runs": 15,
+    "source_revalidation": "PASSED",
+    "fresh_audit_stdout": "APPROVED_LIMITS_MET",
+    "workloads": [
+      {
+        "workload": "monolithic",
+        "passed_runs": 3,
+        "max_wall_time_ms": 318.66879999870434,
+        "max_peak_working_set_bytes": 20103168,
+        "wall_time_ms": 30000,
+        "peak_working_set_bytes": 536870912
+      },
+      {
+        "workload": "composed",
+        "passed_runs": 3,
+        "max_wall_time_ms": 544.3361999932677,
+        "max_peak_working_set_bytes": 18825216,
+        "wall_time_ms": 30000,
+        "peak_working_set_bytes": 536870912
+      },
+      {
+        "workload": "sequential-batch",
+        "passed_runs": 3,
+        "max_wall_time_ms": 858.003200031817,
+        "max_peak_working_set_bytes": 20099072,
+        "wall_time_ms": 30000,
+        "peak_working_set_bytes": 536870912
+      },
+      {
+        "workload": "parallel-batch",
+        "passed_runs": 3,
+        "max_wall_time_ms": 847.0620000152849,
+        "max_peak_working_set_bytes": 58322944,
+        "wall_time_ms": 30000,
+        "peak_working_set_bytes": 805306368
+      },
+      {
+        "workload": "equivalence",
+        "passed_runs": 3,
+        "max_wall_time_ms": 735.8320000348613,
+        "max_peak_working_set_bytes": 19537920,
+        "wall_time_ms": 30000,
+        "peak_working_set_bytes": 536870912
+      }
+    ]
+  },
+  "evidence": {
+    "evidence/phase0-go-no-go.md": "e854cd0e951f8096bd185860ca00d826cdd36e701e8643a1a52e99903069b7bc",
+    "evidence/r16/qualification.json": "5f606124e8d44cb045050627b562ba3dce7818fe7756f4969acea8de06c474ff",
+    "evidence/r16/owner-decisions.json": "ac5699d07e7579e91c9bf216373e469f78cbca3d9e083c8f4bf8b8f0f7e4d46a",
+    "evidence/r16/phase2-acceptance/capture.json": "d5b5f5e971eb8765108a0da9f1b2d2e7a80d95ecdfe13bc1a85ddd12f8e28f6c",
+    "evidence/r16/phase2-acceptance/verdict.json": "ba5116159bfd8a0cdc67d6bd2ea3c7c74a8f16e91c1867c04a7707dc9a4e56ae",
+    "evidence/r16/phase2-transition-proof/qualification.json": "661b9fe493df92e89ae3b192d024b531f801f85afcdcbc6f43d849fcb6c77fcb",
+    "evidence/r16/phase3-review-audit.json": "cce21f8efa2efc7a6fee36ed1d425862d8989c48180fa9720e4232094f1a9dd1",
+    "evidence/r16/baseline-requirements-audit.json": "e8d6d7172ea51246e1d75ec8c797d33002b7877f4315eb1298581a6fefa1a46c",
+    "prototype/benchmark/phase2-subsystem-limits.approved.json": "f1a9840fb8a9a60281fe0aa3b17d7ecf176d58abcbd6a9ab1aa3d8ebead1dc28"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "schema": "Q3AFORMAL_PHASE1_BLOCK_LIMITS_1",
+  "approval_status": "PROPOSED",
+  "workload_sha256": "d015837a36f376abb932050d4ef563f24c2be8634ef2fbe72a20b0426b9dd4f2",
+  "host": {
+    "architecture": "AMD64",
+    "cpu_model": "AMD Ryzen 7 7445HS w/ Radeon 740M Graphics",
+    "installed_memory_label": "16 GB"
+  },
+  "inputs": {
+    "fixtures/P1_arbiter.q3a": "dc955dbf6300ba07d3c2ac48e1affccd6a740d76ae9e5275740b1066ae3016c0",
+    "fixtures/P1_arbiter.sv": "5647fceb6f22e50c69ba6f08b605b7b482fc453dc1aa3125fa7a4e0e22459d4f",
+    "fixtures/P1_elastic_pipeline.q3a": "0070129907dd346e406dc530cb6f9ce84a883421c4819eb5be3eaee3b3ea353d",
+    "fixtures/P1_elastic_pipeline.sv": "76db47386b501adc5cfae05cf3331f9258828fec82bd857b06a3faf487adf867"
+  },
+  "jobs": [
+    {"id": "P1-01-elastic-induction", "max_wall_ms": 15000, "max_peak_working_set_bytes": 134217728},
+    {"id": "P1-02-elastic-stall-failure", "max_wall_ms": 30000, "max_peak_working_set_bytes": 268435456},
+    {"id": "P1-03-elastic-reset-transfer", "max_wall_ms": 15000, "max_peak_working_set_bytes": 134217728},
+    {"id": "P1-04-registered-grant-pdr", "max_wall_ms": 15000, "max_peak_working_set_bytes": 134217728},
+    {"id": "P1-05-elastic-bounded-pass", "max_wall_ms": 15000, "max_peak_working_set_bytes": 134217728}
+  ]
+}

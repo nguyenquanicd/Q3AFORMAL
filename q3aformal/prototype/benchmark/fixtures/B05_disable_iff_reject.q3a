@@ -1,0 +1,3 @@
+Q3AFORMAL_PROJECT 1
+top disable_iff_reject_bench
+source "B05_disable_iff_reject.sv"

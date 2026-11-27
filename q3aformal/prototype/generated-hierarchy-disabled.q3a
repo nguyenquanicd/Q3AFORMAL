@@ -1,0 +1,4 @@
+Q3AFORMAL_PROJECT 1
+top generated_hierarchy_top
+parameter ENABLE 0
+source "corpus/source-model-vectors/generate_instance_vectors.sv"

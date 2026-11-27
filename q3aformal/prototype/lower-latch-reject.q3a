@@ -1,0 +1,3 @@
+Q3AFORMAL_PROJECT 1
+top latch_inference_reject
+source "corpus/source-model-vectors/negative-vectors/latch_inference_reject.sv"

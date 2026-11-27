@@ -1,0 +1,138 @@
+{
+  "schema": "Q3AFORMAL_PHASE1_BENCHMARK_JOBS_1",
+  "host_profile_override": {
+    "installed_memory_label": "16 GB",
+    "source": "User-reported, 2026-11-20"
+  },
+  "jobs": [
+    {
+      "id": "P1-01-elastic-induction",
+      "executable": "../bin/q3aformal-sourcecheck.exe",
+      "working_directory": "../..",
+      "arguments": [
+        "prove",
+        "prototype/benchmark/fixtures/P1_elastic_pipeline.q3a",
+        "--engine",
+        "induction",
+        "--property",
+        "p_hold",
+        "--k",
+        "2",
+        "--output-prefix",
+        "{JOB_OUTPUT_DIR}/proof",
+        "--bundle-dir",
+        "{JOB_OUTPUT_DIR}/bundle"
+      ],
+      "input_files": [
+        "fixtures/P1_elastic_pipeline.q3a",
+        "fixtures/P1_elastic_pipeline.sv"
+      ],
+      "expected_formal_status": "PROVEN",
+      "expected_exit_code": 0,
+      "timeout_seconds": 120
+    },
+    {
+      "id": "P1-02-elastic-stall-failure",
+      "executable": "../bin/q3aformal-sourcecheck.exe",
+      "working_directory": "../..",
+      "arguments": [
+        "prove",
+        "prototype/benchmark/fixtures/P1_elastic_pipeline.q3a",
+        "--parameter",
+        "DROP_STALL",
+        "1",
+        "--engine",
+        "bmc",
+        "--property",
+        "p_hold",
+        "--frames",
+        "64",
+        "--bundle-dir",
+        "{JOB_OUTPUT_DIR}/bundle",
+        "--vcd",
+        "{JOB_OUTPUT_DIR}/witness.vcd"
+      ],
+      "input_files": [
+        "fixtures/P1_elastic_pipeline.q3a",
+        "fixtures/P1_elastic_pipeline.sv"
+      ],
+      "expected_formal_status": "BOUNDED_FAIL",
+      "expected_exit_code": 0,
+      "timeout_seconds": 60
+    },
+    {
+      "id": "P1-03-elastic-reset-transfer",
+      "executable": "../bin/q3aformal-sourcecheck.exe",
+      "working_directory": "../..",
+      "arguments": [
+        "prove",
+        "prototype/benchmark/fixtures/P1_elastic_pipeline.q3a",
+        "--engine",
+        "bmc",
+        "--property",
+        "p_transfer",
+        "--frames",
+        "12",
+        "--bundle-dir",
+        "{JOB_OUTPUT_DIR}/bundle",
+        "--vcd",
+        "{JOB_OUTPUT_DIR}/cover.vcd"
+      ],
+      "input_files": [
+        "fixtures/P1_elastic_pipeline.q3a",
+        "fixtures/P1_elastic_pipeline.sv"
+      ],
+      "expected_formal_status": "COVERED",
+      "expected_exit_code": 0,
+      "timeout_seconds": 60
+    },
+    {
+      "id": "P1-04-registered-grant-pdr",
+      "executable": "../bin/q3aformal-sourcecheck.exe",
+      "working_directory": "../..",
+      "arguments": [
+        "prove",
+        "prototype/benchmark/fixtures/P1_arbiter.q3a",
+        "--engine",
+        "pdr",
+        "--property",
+        "p_registered_grant",
+        "--max-depth",
+        "16",
+        "--evidence-dir",
+        "{JOB_OUTPUT_DIR}/certificate"
+      ],
+      "input_files": [
+        "fixtures/P1_arbiter.q3a",
+        "fixtures/P1_arbiter.sv"
+      ],
+      "expected_formal_status": "PROVEN",
+      "expected_exit_code": 0,
+      "timeout_seconds": 120
+    },
+    {
+      "id": "P1-05-elastic-bounded-pass",
+      "executable": "../bin/q3aformal-sourcecheck.exe",
+      "working_directory": "../..",
+      "arguments": [
+        "prove",
+        "prototype/benchmark/fixtures/P1_elastic_pipeline.q3a",
+        "--engine",
+        "bmc",
+        "--property",
+        "p_hold",
+        "--frames",
+        "24",
+        "--bundle-dir",
+        "{JOB_OUTPUT_DIR}/bundle"
+      ],
+      "input_files": [
+        "fixtures/P1_elastic_pipeline.q3a",
+        "fixtures/P1_elastic_pipeline.sv"
+      ],
+      "expected_formal_status": "BOUNDED_PASS",
+      "expected_exit_code": 1,
+      "timeout_seconds": 60
+    }
+  ]
+}
