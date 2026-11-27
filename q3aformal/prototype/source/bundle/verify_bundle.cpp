@@ -2087,7 +2087,8 @@ void reopen_saved_run(const std::filesystem::path& path, std::ostream& output,
     }
     const auto cause = timed_out ? std::string_view{"deadline"}
                                  : std::string_view{record.at("cancellation_cause").string()};
-    if (!timed_out && cause != "cancel_file" && cause != "ctrl_c" && cause != "ctrl_break") {
+    if (!timed_out && cause != "cancel_file" && cause != "ctrl_c" && cause != "ctrl_break" &&
+        cause != "sigint" && cause != "sigterm") {
         throw std::runtime_error("invalid interruption record cancellation cause");
     }
     const bool bounded_stage = stage == "bounded_query" || stage == "witness_replay";
@@ -2190,7 +2191,9 @@ VerifiedDebugSession open_verified_debug_session(const std::filesystem::path& bu
     return session;
 }
 
+#ifdef _WIN32
 #include "native-viewport-adapter.inc"
+#endif
 #include "debug_session_state.inc"
 
 void write_verified_debug_page(const std::filesystem::path& bundle_directory,

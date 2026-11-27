@@ -229,6 +229,11 @@ static int cli_main(int argc, char** argv) {
     }
 }
 
+#ifdef _WIN32
 int wmain(int argc, wchar_t** argv) {
     return q3a::run_utf8_command_line(argc, argv, cli_main);
 }
+
+#else
+int main(int argc, char** argv) { return cli_main(argc, argv); }
+#endif

@@ -65,9 +65,14 @@
 #include <string>
 #include <string_view>
 #include <system_error>
+#include <thread>
 #include <unordered_set>
 #include <utility>
 #include <vector>
+#ifndef _WIN32
+#include <csignal>
+#include <sys/file.h>
+#endif
 
 namespace {
 
@@ -78,6 +83,7 @@ enum class ProofExit { Conclusive = 0, Inconclusive = 1, SetupError = 2, EngineE
 // A run-control signal bypasses component error translators and unwinds staged evidence.
 enum class ProofStop { Timeout, CancelFile, CtrlC, CtrlBreak, ControlError };
 
+#ifdef _WIN32
 constexpr DWORD kNoConsoleEvent = std::numeric_limits<DWORD>::max();
 std::atomic<DWORD> gConsoleEvent{kNoConsoleEvent};
 
@@ -88,10 +94,56 @@ BOOL WINAPI proof_console_handler(DWORD event) {
     return TRUE;
 }
 
+bool install_console_control() {
+    return SetConsoleCtrlHandler(proof_console_handler, TRUE) != FALSE;
+}
+
+std::optional<ProofStop> console_stop() {
+    const auto event = gConsoleEvent.load(std::memory_order_relaxed);
+    if (event == CTRL_C_EVENT) return ProofStop::CtrlC;
+    if (event == CTRL_BREAK_EVENT) return ProofStop::CtrlBreak;
+    return std::nullopt;
+}
+#else
+volatile std::sig_atomic_t console_signal = 0;
+
+void proof_console_handler(int signal) {
+    if (console_signal == 0) console_signal = signal;
+}
+
+bool install_console_control() {
+    struct sigaction action {};
+    action.sa_handler = proof_console_handler;
+    sigemptyset(&action.sa_mask);
+    sigaddset(&action.sa_mask, SIGINT);
+    sigaddset(&action.sa_mask, SIGTERM);
+    action.sa_flags = SA_RESTART;
+    struct sigaction prior {};
+    if (sigaction(SIGINT, &action, &prior) != 0) return false;
+    if (sigaction(SIGTERM, &action, nullptr) == 0) return true;
+    sigaction(SIGINT, &prior, nullptr);
+    return false;
+}
+
+std::optional<ProofStop> console_stop() {
+    if (console_signal == SIGINT) return ProofStop::CtrlC;
+    if (console_signal == SIGTERM) return ProofStop::CtrlBreak;
+    return std::nullopt;
+}
+#endif
+
 std::string_view cancellation_cause(std::optional<ProofStop> stop) {
     if (stop == ProofStop::CancelFile) return "cancel_file";
+#ifdef _WIN32
     if (stop == ProofStop::CtrlC) return "ctrl_c";
+#else
+    if (stop == ProofStop::CtrlC) return "sigint";
+#endif
+#ifdef _WIN32
     if (stop == ProofStop::CtrlBreak) return "ctrl_break";
+#else
+    if (stop == ProofStop::CtrlBreak) return "sigterm";
+#endif
     return {};
 }
 
@@ -108,7 +160,7 @@ std::filesystem::path default_witness_directory() {
     static std::atomic<std::uint64_t> sequence{0};
     const auto nonce = std::chrono::high_resolution_clock::now().time_since_epoch().count();
     return std::filesystem::current_path() / "q3aformal-results" /
-        ("witness-" + std::to_string(GetCurrentProcessId()) + "-" + std::to_string(nonce) +
+        ("witness-" + std::to_string(q3a::process_id()) + "-" + std::to_string(nonce) +
          "-" + std::to_string(sequence.fetch_add(1)));
 }
 
@@ -169,9 +221,7 @@ struct ProofCommand {
     void check_control(bool force_poll = false) const {
         if (!has_control()) return;
         if (console_control) {
-            const auto event = gConsoleEvent.load(std::memory_order_relaxed);
-            if (event == CTRL_C_EVENT) throw ProofStop::CtrlC;
-            if (event == CTRL_BREAK_EVENT) throw ProofStop::CtrlBreak;
+            if (const auto event = console_stop()) throw *event;
         }
         if (timeout.count() == 0 && cancel_file.empty()) return;
         const auto now = Clock::now();
@@ -296,10 +346,11 @@ q3a::replay::FrameView proof_replay_view(const std::vector<q3a::replay::Frame>& 
 
 void write_run_record(const std::filesystem::path& destination, std::string_view payload) {
     const auto stage = destination.parent_path() /
-        (".q3a-record-" + std::to_string(GetCurrentProcessId()) + "-" +
+        (".q3a-record-" + std::to_string(q3a::process_id()) + "-" +
          std::to_string(ProofCommand::Clock::now().time_since_epoch().count()));
     const auto native_stage = q3a::bundle::detail::windows_file_path(stage);
     const auto native_target = q3a::bundle::detail::windows_file_path(destination);
+#ifdef _WIN32
     const auto file = CreateFileW(native_stage.c_str(), GENERIC_WRITE, 0, nullptr,
         CREATE_NEW, FILE_ATTRIBUTE_NORMAL, nullptr);
     if (file == INVALID_HANDLE_VALUE) throw std::runtime_error("cannot stage run record");
@@ -311,6 +362,22 @@ void write_run_record(const std::filesystem::path& destination, std::string_view
         DeleteFileW(native_stage.c_str());
         throw std::runtime_error("cannot publish run record without replacing an existing path");
     }
+#else
+    const auto fd = open(native_stage.c_str(), O_WRONLY | O_CREAT | O_EXCL | O_CLOEXEC, 0600);
+    if (fd < 0) throw std::runtime_error("cannot stage run record");
+    while (!payload.empty()) {
+        const auto count = write(fd, payload.data(), payload.size());
+        if (count < 0 && errno == EINTR) continue;
+        if (count <= 0) break;
+        payload.remove_prefix(static_cast<std::size_t>(count));
+    }
+    const bool complete = payload.empty() && fsync(fd) == 0;
+    const bool closed = close(fd) == 0;
+    if (!complete || !closed || q3a::publish_no_replace(native_stage, native_target)) {
+        unlink(native_stage.c_str());
+        throw std::runtime_error("cannot publish run record without replacing an existing path");
+    }
+#endif
 }
 
 std::string read_text_file(const std::filesystem::path& path,
@@ -680,7 +747,12 @@ class InductionProofStaging {
 public:
     explicit InductionProofStaging(const std::filesystem::path& prefix) {
         auto requested_parent = prefix.parent_path();
-        if (const auto* scratch = _wgetenv(L"Q3A_SCRATCH_DIR"); scratch && *scratch) {
+#ifdef _WIN32
+        const auto* scratch = _wgetenv(L"Q3A_SCRATCH_DIR");
+#else
+        const auto* scratch = std::getenv("Q3A_SCRATCH_DIR");
+#endif
+        if (scratch && *scratch) {
             requested_parent = scratch;
         }
         const auto absolute = std::filesystem::absolute(
@@ -2627,7 +2699,7 @@ int product_prove(int argc, const char* const* argv, std::ostream& output, bool 
                 run_record = cancel_file;
                 run_record += ".result.json";
             }
-            if (CompareStringOrdinal(cancel_file.c_str(), -1, run_record.c_str(), -1, TRUE) == CSTR_EQUAL) {
+            if (q3a::same_native_path(cancel_file, run_record)) {
                 throw std::invalid_argument("cancel-file and run-record paths must be distinct");
             }
         }
@@ -2812,7 +2884,7 @@ int product_prove(int argc, const char* const* argv, std::ostream& output, bool 
         try {
             if (command.run_record.empty()) {
                 command.run_record = std::filesystem::current_path() /
-                    ("q3a-cancelled-" + std::to_string(GetCurrentProcessId()) + "-" +
+                    ("q3a-cancelled-" + std::to_string(q3a::process_id()) + "-" +
                      std::to_string(command.started.time_since_epoch().count()) + ".json");
             }
             write_run_record(command.run_record, payload);
@@ -2943,17 +3015,33 @@ std::string read_checkpoint_file(const std::filesystem::path& path, std::uint64_
 
 class BatchCheckpoint {
 public:
+#ifdef _WIN32
     explicit BatchCheckpoint(const std::filesystem::path& root)
         : lock_(CreateFileW(q3a::bundle::detail::absolute_windows_file_path(root / "batch.lock").c_str(),
               GENERIC_READ | GENERIC_WRITE, 0, nullptr, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr)) {
         if (lock_ == INVALID_HANDLE_VALUE) throw std::invalid_argument("cannot acquire exclusive batch checkpoint lock");
     }
+    ~BatchCheckpoint() { CloseHandle(lock_); }
+#else
+    explicit BatchCheckpoint(const std::filesystem::path& root) {
+        lock_ = open((root / "batch.lock").c_str(), O_RDWR | O_CREAT | O_CLOEXEC | O_NOFOLLOW, 0600);
+        if (lock_ < 0 || flock(lock_, LOCK_EX | LOCK_NB) != 0) {
+            if (lock_ >= 0) close(lock_);
+            throw std::invalid_argument("cannot acquire exclusive batch checkpoint lock");
+        }
+    }
+
+    ~BatchCheckpoint() { close(lock_); }
+#endif
     BatchCheckpoint(const BatchCheckpoint&) = delete;
     BatchCheckpoint& operator=(const BatchCheckpoint&) = delete;
-    ~BatchCheckpoint() { CloseHandle(lock_); }
 
 private:
+#ifdef _WIN32
     HANDLE lock_;
+#else
+    int lock_;
+#endif
 };
 
 std::string batch_commit(const std::string& identity, std::uint64_t attempt, const std::string& id,
@@ -2979,11 +3067,16 @@ int product_batch_worker(int argc, const char* const* argv) {
             throw std::invalid_argument("invalid batch worker invocation");
         }
         const auto log = q3a::bundle::detail::absolute_windows_file_path(std::filesystem::u8path(args[3]));
+#ifdef _WIN32
         if (!_wfreopen(log.c_str(), L"wb", stderr)) return 3;
         wchar_t executable[32768];
         const auto length = GetModuleFileNameW(nullptr, executable, 32768);
         if (length == 0 || length >= 32768) return 3;
         gExecutablePath = std::filesystem::path(executable);
+#else
+        if (!std::freopen(log.c_str(), "wb", stderr)) return 3;
+        gExecutablePath = "/proc/self/exe";
+#endif
         ProofCommand load(true);
         load.job_memory_mib = memory;
         load.timeout = std::chrono::milliseconds(timeout);
@@ -2994,7 +3087,11 @@ int product_batch_worker(int argc, const char* const* argv) {
         }
         std::vector<const char*> proof;
         for (std::size_t i = proof_index; i < args.size(); ++i) proof.push_back(args[i].c_str());
+#ifdef _WIN32
         std::ofstream discard("NUL");
+#else
+        std::ofstream discard("/dev/null");
+#endif
         if (!discard) return 3;
         return product_prove(static_cast<int>(proof.size()), proof.data(), discard, false, &project, memory);
     } catch (ProofStop stop) {
@@ -3060,7 +3157,14 @@ void run_parallel_batch(std::vector<ParallelBatchJob>& jobs, ParallelBatchLimits
         aggregate = std::max(aggregate, code);
         std::ostringstream suffix;
         suffix << ",\"result_directory\":" << std::quoted(entry.directory) << ",\"reused\":false";
-        if (entry.worker) suffix << ",\"worker_peak_commit_bytes\":" << entry.worker->peak_commit_bytes();
+        if (entry.worker) {
+#ifdef _WIN32
+            suffix << ",\"worker_peak_commit_bytes\":";
+#else
+            suffix << ",\"worker_peak_rss_bytes\":";
+#endif
+            suffix << entry.worker->peak_memory_bytes();
+        }
         suffix << ",\"result\":" << payload << '}';
         *entry.report += suffix.str();
         entry.worker.reset();
@@ -3109,7 +3213,7 @@ void run_parallel_batch(std::vector<ParallelBatchJob>& jobs, ParallelBatchLimits
             active.push_back(&entry);
             limits.peak_workers = std::max(limits.peak_workers, static_cast<unsigned>(active.size()));
         }
-        if (!active.empty()) Sleep(5);
+        if (!active.empty()) std::this_thread::sleep_for(std::chrono::milliseconds(5));
     }
 }
 
@@ -3145,7 +3249,7 @@ int product_batch(int argc, const char* const* argv) {
                 throw std::invalid_argument("invalid or repeated batch option");
             }
         }
-        const bool console_control = SetConsoleCtrlHandler(proof_console_handler, TRUE) != FALSE;
+        const bool console_control = install_console_control();
         const auto plan = read_proof_batch(std::filesystem::u8path(argv[4]));
         if (parallel.workers > 1) {
             if (!checkpoint) throw std::invalid_argument("parallel batch requires --checkpoint or --resume");
@@ -3433,7 +3537,7 @@ int product_composition(int argc, const char* const* argv, bool reopen) {
             throw std::invalid_argument("expected PROJECT --plan FILE and an evidence directory");
         }
         ProofCommand control(true);
-        control.console_control = SetConsoleCtrlHandler(proof_console_handler, TRUE) != FALSE;
+        control.console_control = install_console_control();
         for (int i = 7; i < argc; i += 2) {
             if (i + 1 == argc) throw std::invalid_argument("composition option is missing a value");
             const std::string_view option(argv[i]);
@@ -3485,7 +3589,7 @@ int product_equivalence(int argc, const char* const* argv, bool reopen) {
             throw std::invalid_argument("expected REFERENCE IMPLEMENTATION --plan FILE and an evidence directory");
         }
         ProofCommand control(true);
-        control.console_control = SetConsoleCtrlHandler(proof_console_handler, TRUE) != FALSE;
+        control.console_control = install_console_control();
         std::size_t depth = 32;
         bool depth_given = false;
         for (int i = 8; i < argc; i += 2) {
@@ -3564,7 +3668,7 @@ int development_memory(int argc, const char* const* argv, DevelopmentMemoryMode 
             throw std::invalid_argument("maximum memory cell count must be positive");
         }
         ProofCommand control(true);
-        control.console_control = SetConsoleCtrlHandler(proof_console_handler, TRUE) != FALSE;
+        control.console_control = install_console_control();
         std::set<std::string_view> seen;
         std::size_t depth = 32;
         std::size_t queries = q3a::pdr::kDefaultSearchQueries;
@@ -3738,7 +3842,7 @@ int development_events(int argc, const char* const* argv, DevelopmentEventMode m
             throw std::invalid_argument("event window transition count must be in 0..10000");
         }
         ProofCommand control(true);
-        control.console_control = SetConsoleCtrlHandler(proof_console_handler, TRUE) != FALSE;
+        control.console_control = install_console_control();
         std::set<std::string_view> seen;
         std::size_t maximum_depth = 32;
         std::size_t maximum_queries = q3a::pdr::kDefaultSearchQueries;
@@ -3945,7 +4049,7 @@ int development_liveness(int argc, const char* const* argv, bool reopen) {
         std::filesystem::path evidence;
         std::filesystem::path vcd;
         ProofCommand control(true);
-        control.console_control = SetConsoleCtrlHandler(proof_console_handler, TRUE) != FALSE;
+        control.console_control = install_console_control();
         std::set<std::string_view> seen;
         for (int index = 3; index < argc;) {
             const std::string_view option(argv[index++]);
@@ -4168,7 +4272,7 @@ int development_four_state_proof(int argc, const char* const* argv, bool reopen)
             throw std::invalid_argument("expected PROJECT --property NAME or --expect OUTPUT BITS, then --evidence-dir DIR");
         }
         ProofCommand control(true);
-        control.console_control = SetConsoleCtrlHandler(proof_console_handler, TRUE) != FALSE;
+        control.console_control = install_console_control();
         std::set<std::string_view> seen;
         std::optional<std::size_t> sample;
         std::filesystem::path vcd;
@@ -4222,7 +4326,7 @@ int development_four_state_proof(int argc, const char* const* argv, bool reopen)
             std::filesystem::u8path(argv[evidence_index + 1]));
         if (!vcd.empty() && (!vcd.has_filename() || std::filesystem::exists(vcd) ||
             !std::filesystem::is_directory(vcd.parent_path()) ||
-            CompareStringOrdinal(vcd.c_str(), -1, evidence.c_str(), -1, TRUE) == CSTR_EQUAL)) {
+            q3a::same_native_path(vcd, evidence))) {
             throw std::invalid_argument("four-state VCD requires an unused file path in an existing directory");
         }
         timing.write(std::cerr, "source_model", timing.elapsed(started));
@@ -4500,10 +4604,14 @@ static int cli_main(int argc, char** argv) {
         write_product_version(std::cout);
         return 0;
     }
+#ifdef _WIN32
     std::error_code executable_error;
     gExecutablePath = std::filesystem::absolute(
         std::filesystem::u8path(argv[0]), executable_error);
     if (executable_error) gExecutablePath = std::filesystem::u8path(argv[0]);
+#else
+    gExecutablePath = "/proc/self/exe";
+#endif
 #ifdef Q3A_ENABLE_DEVELOPMENT_FOUR_STATE
     if (argc >= 2 && std::string_view(argv[1]) == "dev-lower-four-state") return development_four_state_model(argc, argv);
     if (argc >= 2 && std::string_view(argv[1]) == "dev-eval-four-state") return development_four_state(argc, argv);
@@ -4761,7 +4869,7 @@ static int cli_main(int argc, char** argv) {
     }
     if (argc >= 2 && std::string_view(argv[1]) == "prove") {
         return product_prove(argc, argv, std::cout,
-            SetConsoleCtrlHandler(proof_console_handler, TRUE) != FALSE);
+            install_console_control());
     }
     if (argc >= 2 && std::string_view(argv[1]) == "prove-batch") {
         return product_batch(argc, argv);
@@ -4946,6 +5054,11 @@ static int cli_main(int argc, char** argv) {
     }
 }
 
+#ifdef _WIN32
 int wmain(int argc, wchar_t** argv) {
     return q3a::run_utf8_command_line(argc, argv, cli_main);
 }
+
+#else
+int main(int argc, char** argv) { return cli_main(argc, argv); }
+#endif

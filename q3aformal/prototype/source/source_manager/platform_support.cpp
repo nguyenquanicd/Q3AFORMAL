@@ -1,8 +1,18 @@
 #include "platform_support.hpp"
 
+#ifdef _WIN32
 #include <windows.h>
 #include <bcrypt.h>
 #include <psapi.h>
+#else
+#include <cerrno>
+#include <cstring>
+#include <fstream>
+#include <linux/if_alg.h>
+#include <sys/socket.h>
+#include <system_error>
+#include <unistd.h>
+#endif
 
 #include <algorithm>
 #include <array>
@@ -18,6 +28,7 @@
 namespace q3a {
 namespace {
 
+#ifdef _WIN32
 struct AlgorithmGuard {
     BCRYPT_ALG_HANDLE value = nullptr;
     ~AlgorithmGuard() {
@@ -51,11 +62,13 @@ void require_nt_success(NTSTATUS status, const char* operation) {
     }
 }
 
+#endif
 } // namespace
 
 namespace {
 constexpr std::uint64_t kMebibyte = 1024 * 1024;
 
+#ifdef _WIN32
 std::uint64_t available_physical_bytes() {
     MEMORYSTATUSEX status{};
     status.dwLength = sizeof(status);
@@ -73,11 +86,44 @@ bool private_commit_bytes(std::uint64_t& bytes) {
     return true;
 }
 
+#else
+std::uint64_t available_physical_bytes() {
+    std::ifstream data("/proc/meminfo");
+    std::string key, line;
+    while (data >> key) {
+        if (key == "MemAvailable:") {
+            std::uint64_t kib = 0;
+            return data >> kib ? kib * 1024 : 0;
+        }
+        std::getline(data, line);
+    }
+    return 0;
+}
+
+bool private_commit_bytes(std::uint64_t& bytes) {
+    // Linux reports data/stack mappings rather than Windows private commit.
+    // VmData is a conservative budget for the solver's heap allocations.
+    std::ifstream data("/proc/self/status");
+    std::string key, line;
+    while (data >> key) {
+        if (key == "VmData:") {
+            std::uint64_t kib = 0;
+            if (!(data >> kib)) return false;
+            bytes = kib * 1024;
+            return true;
+        }
+        std::getline(data, line);
+    }
+    return false;
+}
+#endif
+
 bool exceeds_budget(std::uint64_t used, std::uint64_t pending, std::uint64_t limit) {
     return used > limit || pending > limit - used;
 }
 } // namespace
 
+#ifdef _WIN32
 int run_utf8_command_line(int argc, wchar_t** argv, int (*entry)(int, char**)) {
     std::vector<std::string> arguments;
     std::vector<char*> pointers;
@@ -105,6 +151,8 @@ int run_utf8_command_line(int argc, wchar_t** argv, int (*entry)(int, char**)) {
     }
     return entry(argc, pointers.data());
 }
+
+#endif
 
 bool can_reserve_physical_memory(std::uint64_t reservation_bytes, std::uint64_t reserve_bytes) {
     const auto available = available_physical_bytes();
@@ -200,7 +248,7 @@ public:
 protected:
     int sync() override {
         const auto count = pptr() - pbase();
-        if (count != 0) update_(pbase(), static_cast<ULONG>(count));
+        if (count != 0) update_(pbase(), static_cast<std::uint32_t>(count));
         setp(bytes_.data(), bytes_.data() + bytes_.size());
         return 0;
     }
@@ -221,6 +269,7 @@ private:
 
 template <typename Feed>
 std::string compute_sha256(Feed feed) {
+#ifdef _WIN32
     AlgorithmGuard algorithm;
     require_nt_success(
         BCryptOpenAlgorithmProvider(&algorithm.value,
@@ -276,6 +325,47 @@ std::string compute_sha256(Feed feed) {
         BCryptFinishHash(hash.value, digest.data(), digest_length, 0),
         "BCryptFinishHash");
 
+#else
+    struct Socket {
+        int fd;
+        ~Socket() { if (fd >= 0) close(fd); }
+    };
+    const auto fail = [](const char* operation) {
+        throw std::system_error(errno, std::generic_category(), operation);
+    };
+    const Socket algorithm{socket(AF_ALG, SOCK_SEQPACKET | SOCK_CLOEXEC, 0)};
+    if (algorithm.fd < 0) fail("open Linux SHA-256 socket");
+    sockaddr_alg address{};
+    address.salg_family = AF_ALG;
+    std::memcpy(address.salg_type, "hash", sizeof("hash"));
+    std::memcpy(address.salg_name, "sha256", sizeof("sha256"));
+    if (bind(algorithm.fd, reinterpret_cast<const sockaddr*>(&address), sizeof(address)) != 0) {
+        fail("bind Linux SHA-256");
+    }
+    const Socket operation{accept4(algorithm.fd, nullptr, nullptr, SOCK_CLOEXEC)};
+    if (operation.fd < 0) fail("start Linux SHA-256");
+    feed([&](const char* data, std::uint32_t count) {
+        while (count != 0) {
+            const auto chunk = std::min<std::uint32_t>(count, 64 * 1024);
+            const auto sent = send(operation.fd, data, chunk, MSG_MORE | MSG_NOSIGNAL);
+            if (sent < 0 && errno == EINTR) continue;
+            if (sent < 0) fail("update Linux SHA-256");
+            if (sent != chunk) throw std::runtime_error("short Linux SHA-256 update");
+            data += chunk;
+            count -= chunk;
+        }
+    });
+    std::array<unsigned char, 32> digest{};
+    ssize_t received;
+    do {
+        received = recv(operation.fd, digest.data(), digest.size(), 0);
+    } while (received < 0 && errno == EINTR);
+    if (received < 0) fail("finish Linux SHA-256");
+    if (received != static_cast<ssize_t>(digest.size())) {
+        throw std::runtime_error("incomplete Linux SHA-256 digest");
+    }
+#endif
+
     std::ostringstream out;
     out << std::hex << std::setfill('0') << std::nouppercase;
     for (const auto byte : digest) {
@@ -287,10 +377,10 @@ std::string compute_sha256(Feed feed) {
 
 std::string sha256_hex(std::string_view bytes) {
     return compute_sha256([&](const auto& update) {
-        constexpr auto max_chunk = std::numeric_limits<ULONG>::max();
+        constexpr auto max_chunk = std::numeric_limits<std::uint32_t>::max();
         while (!bytes.empty()) {
             const auto count = std::min<std::size_t>(bytes.size(), max_chunk);
-            update(bytes.data(), static_cast<ULONG>(count));
+            update(bytes.data(), static_cast<std::uint32_t>(count));
             bytes.remove_prefix(count);
         }
     });
@@ -316,7 +406,7 @@ std::string sha256_stream(std::istream& input) {
         std::array<char, 64 * 1024> buffer;
         do {
             input.read(buffer.data(), buffer.size());
-            if (input.gcount() > 0) update(buffer.data(), static_cast<ULONG>(input.gcount()));
+            if (input.gcount() > 0) update(buffer.data(), static_cast<std::uint32_t>(input.gcount()));
         } while (input);
         if (input.bad() || !input.eof()) {
             throw std::runtime_error("failed while reading SHA-256 input stream");
@@ -332,7 +422,7 @@ std::string sha256_stream(std::istream& input, std::uint64_t expected_bytes) {
             if (!input.read(buffer.data(), static_cast<std::streamsize>(count))) {
                 throw std::runtime_error("SHA-256 input ended before the declared size");
             }
-            update(buffer.data(), static_cast<ULONG>(count));
+            update(buffer.data(), static_cast<std::uint32_t>(count));
             expected_bytes -= count;
         }
         if (input.peek() != std::char_traits<char>::eof() || input.bad()) {

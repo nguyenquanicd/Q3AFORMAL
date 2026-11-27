@@ -218,9 +218,8 @@ void publish_checked_proof(const std::filesystem::path& saved_proof,
                 throw std::runtime_error("checked proof copy is incomplete or differs from the cache entry");
             }
         }
-        if (!MoveFileExW(copy.c_str(), output.c_str(), 0)) {
-            throw std::system_error(static_cast<int>(GetLastError()),
-                                    std::system_category(), "cannot publish checked proof copy");
+        if (const auto error = q3a::publish_no_replace(copy, output)) {
+            throw std::system_error(error, "cannot publish checked proof copy");
         }
     } catch (...) {
         std::error_code ignored;

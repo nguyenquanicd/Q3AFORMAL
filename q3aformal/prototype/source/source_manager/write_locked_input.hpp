@@ -5,9 +5,16 @@
 #include <cstdint>
 #include <filesystem>
 #include <istream>
+#ifdef _WIN32
 #include <io.h>
-#include <memory>
 #include <share.h>
+#else
+#include <fcntl.h>
+#include <sys/file.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#endif
+#include <memory>
 #include <stdexcept>
 #include <streambuf>
 
@@ -18,7 +25,11 @@ namespace q3a {
 class WriteLockedInput final : private std::streambuf {
 public:
     explicit WriteLockedInput(const std::filesystem::path& path)
-        : file_(_wfsopen(path.c_str(), L"rb", _SH_DENYWR), &std::fclose),
+        #ifdef _WIN32
+        : file_(_wfsopen(path.c_str(), L"rb", _SH_DENYWR)),
+#else
+        : file_(open_shared_input(path)),
+#endif
           input_(this) {
         if (!file_) {
             throw std::runtime_error("cannot open input for reading with writes denied: " +
@@ -27,7 +38,13 @@ public:
     }
 
     std::istream& stream() noexcept { return input_; }
-    std::intptr_t native_handle() const noexcept { return _get_osfhandle(_fileno(file_.get())); }
+    std::intptr_t native_handle() const noexcept {
+#ifdef _WIN32
+        return _get_osfhandle(_fileno(file_.get()));
+#else
+        return fileno(file_.get());
+#endif
+    }
 
     void rewind() {
         if (std::fseek(file_.get(), 0, SEEK_SET) != 0) {
@@ -38,11 +55,41 @@ public:
     }
 
 private:
+#ifndef _WIN32
+    static std::FILE* open_shared_input(const std::filesystem::path& path) {
+        const auto fd = open(path.c_str(), O_RDONLY | O_CLOEXEC | O_NONBLOCK);
+        if (fd < 0) return nullptr;
+        struct stat info {};
+        if (fstat(fd, &info) == 0 && S_ISREG(info.st_mode) &&
+            flock(fd, LOCK_SH | LOCK_NB) == 0) {
+            if (auto* file = fdopen(fd, "rb")) return file;
+        }
+        close(fd);
+        return nullptr;
+    }
+#endif
+
+    auto file_offset() const {
+#ifdef _WIN32
+        return _ftelli64(file_.get());
+#else
+        return ftello(file_.get());
+#endif
+    }
+
+    int seek_file(off_type offset, int origin) {
+#ifdef _WIN32
+        return _fseeki64(file_.get(), offset, origin);
+#else
+        return fseeko(file_.get(), offset, origin);
+#endif
+    }
+
     pos_type seekoff(off_type offset, std::ios_base::seekdir direction,
                      std::ios_base::openmode mode) override {
         if (!(mode & std::ios_base::in)) return pos_type(off_type(-1));
         if (direction == std::ios_base::cur && offset == 0) {
-            const auto physical = _ftelli64(file_.get());
+            const auto physical = file_offset();
             if (physical < 0) return pos_type(off_type(-1));
             return pos_type(physical - unread_bytes());
         }
@@ -50,9 +97,9 @@ private:
             return pos_type(off_type(-1));
         }
         const int origin = direction == std::ios_base::beg ? SEEK_SET : SEEK_END;
-        if (_fseeki64(file_.get(), offset, origin) != 0) return pos_type(off_type(-1));
+        if (seek_file(offset, origin) != 0) return pos_type(off_type(-1));
         setg(nullptr, nullptr, nullptr);
-        return pos_type(_ftelli64(file_.get()));
+        return pos_type(file_offset());
     }
 
     pos_type seekpos(pos_type position, std::ios_base::openmode mode) override {
@@ -74,7 +121,10 @@ private:
         return traits_type::to_int_type(*gptr());
     }
 
-    std::unique_ptr<std::FILE, decltype(&std::fclose)> file_;
+    struct CloseFile {
+        void operator()(std::FILE* file) const noexcept { std::fclose(file); }
+    };
+    std::unique_ptr<std::FILE, CloseFile> file_;
     std::array<char, 64 * 1024> buffer_;
     std::istream input_;
 };

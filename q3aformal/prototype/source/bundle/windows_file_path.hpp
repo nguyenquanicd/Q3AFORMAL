@@ -1,10 +1,13 @@
 #pragma once
 
 #include <algorithm>
+#include <cstdint>
+#include <cstdio>
 #include <filesystem>
 #include <memory>
 #include <system_error>
 
+#ifdef _WIN32
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
@@ -63,3 +66,65 @@ inline std::filesystem::path canonical_directory(const std::filesystem::path& ab
 }
 
 } // namespace q3a::bundle::detail
+#else
+#include <cerrno>
+#include <fcntl.h>
+#include <linux/fs.h>
+#include <unistd.h>
+
+namespace q3a::bundle::detail {
+
+inline std::filesystem::path windows_file_path(const std::filesystem::path& path) {
+    return path;
+}
+
+inline std::filesystem::path absolute_windows_file_path(const std::filesystem::path& path) {
+    return std::filesystem::absolute(path).lexically_normal();
+}
+
+inline std::filesystem::path canonical_directory(const std::filesystem::path& path,
+                                                 std::error_code& error) {
+    const auto result = std::filesystem::canonical(path, error);
+    if (!error && !std::filesystem::is_directory(result, error) && !error) {
+        error = std::make_error_code(std::errc::not_a_directory);
+    }
+    return error ? std::filesystem::path{} : result;
+}
+
+} // namespace q3a::bundle::detail
+#endif
+
+namespace q3a {
+
+inline bool same_native_path(const std::filesystem::path& left,
+                             const std::filesystem::path& right) {
+#ifdef _WIN32
+    return CompareStringOrdinal(left.c_str(), -1, right.c_str(), -1, TRUE) == CSTR_EQUAL;
+#else
+    return left == right;
+#endif
+}
+
+inline std::uint64_t process_id() noexcept {
+#ifdef _WIN32
+    return GetCurrentProcessId();
+#else
+    return static_cast<std::uint64_t>(getpid());
+#endif
+}
+
+inline std::error_code publish_no_replace(const std::filesystem::path& stage,
+                                          const std::filesystem::path& target) noexcept {
+#ifdef _WIN32
+    if (!MoveFileW(stage.c_str(), target.c_str())) {
+        return {static_cast<int>(GetLastError()), std::system_category()};
+    }
+#else
+    if (renameat2(AT_FDCWD, stage.c_str(), AT_FDCWD, target.c_str(), RENAME_NOREPLACE) != 0) {
+        return {errno, std::generic_category()};
+    }
+#endif
+    return {};
+}
+
+} // namespace q3a

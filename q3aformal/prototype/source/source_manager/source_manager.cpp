@@ -4,7 +4,11 @@
 #include "../frontend/preprocessor.hpp"
 #include "../frontend/parser.hpp"
 
+#ifdef _WIN32
 #include <windows.h>
+#else
+#include <sys/stat.h>
+#endif
 
 #include <algorithm>
 #include <array>
@@ -107,6 +111,7 @@ std::string canonical_input_text(const ProjectInput& project) {
     return canonical.str();
 }
 
+#ifdef _WIN32
 using FileIdentity = std::pair<ULONGLONG, std::array<BYTE, 16>>;
 
 std::optional<FileIdentity> file_identity(const WriteLockedInput& input) {
@@ -119,6 +124,15 @@ std::optional<FileIdentity> file_identity(const WriteLockedInput& input) {
     std::copy_n(info.FileId.Identifier, identity.second.size(), identity.second.begin());
     return identity;
 }
+#else
+using FileIdentity = std::pair<dev_t, ino_t>;
+
+std::optional<FileIdentity> file_identity(const WriteLockedInput& input) {
+    struct stat info {};
+    if (fstat(static_cast<int>(input.native_handle()), &info) != 0) return std::nullopt;
+    return FileIdentity{info.st_dev, info.st_ino};
+}
+#endif
 
 std::vector<std::uint8_t> read_binary_file(std::istream& input, const std::string& display_path) {
     input.seekg(0, std::ios::end);

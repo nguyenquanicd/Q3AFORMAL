@@ -1,6 +1,10 @@
 #pragma once
 
+#ifdef _WIN32
 #include <windows.h>
+#else
+#include <sys/types.h>
+#endif
 
 #include <cstdint>
 #include <optional>
@@ -17,13 +21,20 @@ public:
     BatchWorker& operator=(const BatchWorker&) = delete;
     ~BatchWorker();
 
-    std::optional<DWORD> poll() const;
-    void stop(DWORD exit_code) const;
-    std::uint64_t peak_commit_bytes() const;
+    std::optional<std::uint32_t> poll() const;
+    void stop(std::uint32_t exit_code) const;
+    std::uint64_t peak_memory_bytes() const;
 
 private:
+#ifdef _WIN32
     HANDLE job_ = nullptr;
     HANDLE process_ = nullptr;
+#else
+    pid_t process_ = -1;
+    mutable std::optional<std::uint32_t> result_;
+    mutable std::uint64_t peak_rss_bytes_ = 0;
+    void reap(bool block) const;
+#endif
 };
 
 std::string decode_batch_worker_argument(std::string_view argument);

@@ -1,12 +1,23 @@
 #include "batch_worker.hpp"
 
 #include <limits>
+#ifndef _WIN32
+#include <cerrno>
+#include <csignal>
+#include <sys/prctl.h>
+#include <sys/resource.h>
+#include <sys/wait.h>
+#include <system_error>
+#include <unistd.h>
+#endif
+
 #include <stdexcept>
 
 namespace q3a {
 namespace {
 constexpr std::uint64_t kMiB = 1024 * 1024;
 
+#ifdef _WIN32
 [[noreturn]] void windows_error(const char* operation, DWORD error = GetLastError()) {
     throw std::runtime_error(std::string(operation) + " failed with Windows error " + std::to_string(error));
 }
@@ -78,7 +89,7 @@ BatchWorker::~BatchWorker() {
     CloseHandle(process_);
 }
 
-std::optional<DWORD> BatchWorker::poll() const {
+std::optional<std::uint32_t> BatchWorker::poll() const {
     const auto wait = WaitForSingleObject(process_, 0);
     if (wait == WAIT_TIMEOUT) return std::nullopt;
     if (wait != WAIT_OBJECT_0) windows_error("WaitForSingleObject");
@@ -87,18 +98,96 @@ std::optional<DWORD> BatchWorker::poll() const {
     return exit_code;
 }
 
-void BatchWorker::stop(DWORD exit_code) const {
+void BatchWorker::stop(std::uint32_t exit_code) const {
     if (!TerminateJobObject(job_, exit_code) && !poll()) windows_error("TerminateJobObject");
     if (WaitForSingleObject(process_, INFINITE) != WAIT_OBJECT_0) windows_error("WaitForSingleObject");
 }
 
-std::uint64_t BatchWorker::peak_commit_bytes() const {
+std::uint64_t BatchWorker::peak_memory_bytes() const {
     JOBOBJECT_EXTENDED_LIMIT_INFORMATION quota{};
     if (!QueryInformationJobObject(job_, JobObjectExtendedLimitInformation, &quota, sizeof(quota), nullptr)) {
         windows_error("QueryInformationJobObject");
     }
     return quota.PeakJobMemoryUsed;
 }
+
+#else
+std::string encode_worker_argument(std::string_view argument) {
+    constexpr char hex[] = "0123456789abcdef";
+    std::string encoded = "x";
+    for (unsigned char byte : argument) {
+        encoded += hex[byte >> 4];
+        encoded += hex[byte & 15];
+    }
+    return encoded;
+}
+} // namespace
+
+BatchWorker::BatchWorker(const std::vector<std::string>& arguments, std::uint64_t memory_mib) {
+    if (memory_mib == 0 || memory_mib > std::numeric_limits<rlim_t>::max() / kMiB) {
+        throw std::invalid_argument("invalid batch worker memory limit");
+    }
+    std::vector<std::string> encoded{"q3aformal-sourcecheck", "--batch-worker",
+                                     encode_worker_argument(std::to_string(memory_mib))};
+    for (const auto& argument : arguments) encoded.push_back(encode_worker_argument(argument));
+    std::vector<char*> argv;
+    for (auto& argument : encoded) argv.push_back(argument.data());
+    argv.push_back(nullptr);
+
+    const auto parent = getpid();
+    process_ = fork();
+    if (process_ < 0) throw std::system_error(errno, std::generic_category(), "fork proof worker");
+    if (process_ == 0) {
+        // The child must also exit if the coordinator dies before exec.
+        if (prctl(PR_SET_PDEATHSIG, SIGKILL) != 0 || getppid() != parent) _exit(3);
+        rlimit limit{};
+        if (getrlimit(RLIMIT_AS, &limit) != 0) _exit(3);
+        const auto bytes = static_cast<rlim_t>(memory_mib * kMiB);
+        if (bytes < limit.rlim_cur) limit.rlim_cur = bytes;
+        if (setrlimit(RLIMIT_AS, &limit) != 0) _exit(3);
+        execv("/proc/self/exe", argv.data());
+        _exit(3);
+    }
+}
+
+BatchWorker::~BatchWorker() {
+    if (!result_) {
+        kill(process_, SIGKILL);
+        try { reap(true); } catch (...) {}
+    }
+}
+
+void BatchWorker::reap(bool block) const {
+    if (result_) return;
+    int state = 0;
+    struct rusage usage {};
+    pid_t pid;
+    do { pid = wait4(process_, &state, block ? 0 : WNOHANG, &usage); }
+    while (pid < 0 && errno == EINTR);
+    if (pid < 0) throw std::system_error(errno, std::generic_category(), "wait for proof worker");
+    if (pid == 0) return;
+    peak_rss_bytes_ = static_cast<std::uint64_t>(usage.ru_maxrss) * 1024;
+    result_ = WIFEXITED(state) ? static_cast<std::uint32_t>(WEXITSTATUS(state)) : 3U;
+}
+
+std::optional<std::uint32_t> BatchWorker::poll() const {
+    reap(false);
+    return result_;
+}
+
+void BatchWorker::stop(std::uint32_t exit_code) const {
+    if (poll()) return;
+    if (kill(process_, SIGKILL) != 0 && errno != ESRCH) {
+        throw std::system_error(errno, std::generic_category(), "stop proof worker");
+    }
+    reap(true);
+    result_ = exit_code;
+}
+
+std::uint64_t BatchWorker::peak_memory_bytes() const {
+    return peak_rss_bytes_;
+}
+#endif
 
 std::string decode_batch_worker_argument(std::string_view argument) {
     if (argument.empty() || argument.front() != 'x' || argument.size() % 2 == 0) {

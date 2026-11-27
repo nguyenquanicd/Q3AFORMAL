@@ -486,7 +486,7 @@ el('indexChanges').onclick = async () => {
     backgroundIndex = job;
     const cancelled = () => backgroundIndex !== job;
     const total = blocks + ' blocks for ' + signals.length + ' signals';
-    el('indexStatus').textContent = 'Indexing 0 of ' + total + '…';
+    el('indexStatus').textContent = 'Indexing 0 of ' + total + '\u2026';
     updateIndexButton();
     try {
         for (let block = 0; block < blocks; ++block) {
@@ -494,7 +494,7 @@ el('indexChanges').onclick = async () => {
             if (cancelled()) return;
             await Promise.all(signals.map(signal => indexChanges(index, signal, block, cancelled, job.previousValues)));
             if (cancelled()) return;
-            el('indexStatus').textContent = 'Indexed ' + (block + 1) + ' of ' + total + '…';
+            el('indexStatus').textContent = 'Indexed ' + (block + 1) + ' of ' + total + '\u2026';
         }
         stopIndexing('Indexed ' + total + '.');
     } catch (error) {

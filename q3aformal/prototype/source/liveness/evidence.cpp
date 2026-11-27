@@ -12,7 +12,6 @@
 #include <fstream>
 #include <iomanip>
 #include <string_view>
-#include <windows.h>
 
 namespace q3a::liveness {
 namespace {
@@ -163,13 +162,13 @@ std::string publish_artifact(const std::filesystem::path& path, const MemoryBudg
     }
     const auto nonce = std::chrono::steady_clock::now().time_since_epoch().count();
     const auto stage = target.parent_path() /
-        (".q3a-live-" + std::to_string(GetCurrentProcessId()) + "-" + std::to_string(nonce));
+        (".q3a-live-" + std::to_string(q3a::process_id()) + "-" + std::to_string(nonce));
     const auto staged_file = stage / "result";
     if (!std::filesystem::create_directory(stage)) throw std::runtime_error("cannot stage liveness evidence");
     try {
         auto digest = write(staged_file);
         budget.check();
-        if (!MoveFileW(staged_file.c_str(), target.c_str())) {
+        if (q3a::publish_no_replace(staged_file, target)) {
             throw std::runtime_error("cannot publish liveness output without replacing an existing path");
         }
         remove_stage(staged_file, stage);

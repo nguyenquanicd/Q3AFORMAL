@@ -1,6 +1,6 @@
 # Q3AFORMAL
 
-Q3AFORMAL is a self-contained Windows x64 formal verification tool for application-specific integrated circuit (ASIC) register-transfer level (RTL) designs written in SystemVerilog. It checks properties from the supported SystemVerilog Assertions (SVA) profiles, produces independently checkable proofs, and replays counterexamples and cover witnesses from source.
+Q3AFORMAL is a self-contained formal verification tool for application-specific integrated circuit (ASIC) register-transfer level (RTL) designs written in SystemVerilog. It runs on Windows x64 and Linux x86-64. It checks properties from the supported SystemVerilog Assertions (SVA) profiles, produces independently checkable proofs, and replays counterexamples and cover witnesses from source.
 
 [R16 Windows release](https://github.com/nguyenquanicd/Q3AFORMAL/releases/tag/r16) · [Specification](Q3AFORMAL_SPECIFICATION.md) · [Release acceptance](q3aformal/evidence/r16/release-acceptance.json)
 
@@ -17,7 +17,19 @@ Q3AFORMAL is a self-contained Windows x64 formal verification tool for applicati
 
 A bounded pass applies to the checked bound. An unbounded proof requires a checked certificate under the recorded assumptions. Start with the [baseline profile](q3aformal/specs/003-phase1-block-mvp/plan.md#supported-phase-1-language-profile) and consult the [extended conformance matrix](q3aformal/specs/005-phase3-profile-expansion/conformance-matrix.md) for accepted syntax and limits.
 
-## Install on Windows
+## Install by operating system
+
+The Python 3 installer detects the operating system and CPU architecture. It selects the Windows x64 ZIP or Linux x86-64 archive, verifies its SHA-256 checksum, and installs into a new user-owned directory. The asset directory must contain the matching package and its entry in `INSTALL_SHA256SUMS`.
+
+From the repository root, when the release assets and the checksum manifest are available in `q3aformal/dist`, run:
+
+~~~sh
+python3 install.py
+~~~
+
+On Windows, use `py -3 install.py`. Use `--assets-dir` to select a separate distribution directory and `--prefix` to choose a fresh installation path. The default locations are `~/.local/opt/q3aformal` on Linux and `%LOCALAPPDATA%/Q3AFORMAL` on Windows.
+
+## Install the R16 Windows package manually
 
 1. Download `q3aformal-windows-x64-development-preview-r16.zip` from the [R16 release](https://github.com/nguyenquanicd/Q3AFORMAL/releases/tag/r16).
 2. Optionally verify the download in PowerShell. The expected digest is in [SHA256SUMS](SHA256SUMS).
@@ -29,7 +41,7 @@ Get-FileHash .\q3aformal-windows-x64-development-preview-r16.zip -Algorithm SHA2
 
 The ZIP contains both native executables, example projects, and compiler runtime notices. The executables run directly without an installer or a separate formal engine.
 
-## Quick start
+## Windows quick start
 
 Run these commands from the extracted package. Use a new output directory for each proof or witness.
 
@@ -71,7 +83,7 @@ The product proof command reports machine-readable outcomes and diagnostics sepa
 
 See the [English command guide](q3aformal/docs/windows-development-preview.md) for memory, multi-clock, four-state, liveness and waveform examples. The [Vietnamese user guide](q3aformal/USER_GUIDE.md) includes additional examples and command options.
 
-## Build from source
+## Windows build from source
 
 Use PowerShell 7 and an x64 MinGW-w64 C++ compiler with C++17 support, such as MSYS2 UCRT64 GCC. Put its `g++` and `objdump` executables on your PowerShell path.
 
@@ -92,6 +104,10 @@ The default build enables the baseline profile. To build with the full R16 featu
 ~~~
 
 The `Development` flag names are part of the build interface. The R16 qualification applies to the exact released executable pair and manifest. An independent rebuild has its own build identity.
+
+## Linux build and quick start
+
+Follow the [Linux build, packaging and execution guide](q3aformal/docs/linux.md). Linux uses the command-line proof engines and the offline HTML waveform viewer. The existing R16 Windows qualification applies to the published Windows package.
 
 ## Repository layout
 

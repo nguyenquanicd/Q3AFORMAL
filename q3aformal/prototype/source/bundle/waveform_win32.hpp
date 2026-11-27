@@ -4,7 +4,9 @@
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
+#ifdef _WIN32
 #include <windows.h>
+#endif
 
 #include <cstdint>
 #include <optional>
@@ -40,10 +42,12 @@ struct WaveViewport {
     std::vector<WaveSampleRange> asserted_resets{};
 };
 
+#ifdef _WIN32
 std::size_t visible_wave_lanes(const RECT& bounds, const WaveViewport& view);
 std::uint64_t sample_at_pixel(const RECT& bounds, const WaveViewport& view, int x);
 void append_asserted_reset_ranges(WaveViewport& view, const WaveSignal& reset, bool active_high);
 void paint_waveform(HDC context, const RECT& bounds, const WaveViewport& view);
+#endif
 
 } // namespace q3a::debug
 

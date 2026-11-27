@@ -91,7 +91,7 @@ void publish_range_trace(const std::filesystem::path& destination, const lowerin
     }
     const auto nonce = std::chrono::steady_clock::now().time_since_epoch().count();
     const auto stage = target.parent_path() /
-        (".q3a-range-" + std::to_string(GetCurrentProcessId()) + "-" + std::to_string(nonce));
+        (".q3a-range-" + std::to_string(q3a::process_id()) + "-" + std::to_string(nonce));
     const auto staged_file = stage / "range.q3t";
     if (!std::filesystem::create_directory(stage)) throw std::runtime_error("cannot stage memory range trace");
     try {
@@ -101,7 +101,7 @@ void publish_range_trace(const std::filesystem::path& destination, const lowerin
         output.close();
         if (!output) throw std::runtime_error("cannot write memory range trace");
         memory.check();
-        if (!MoveFileW(staged_file.c_str(), target.c_str())) {
+        if (q3a::publish_no_replace(staged_file, target)) {
             throw std::runtime_error("cannot publish memory range trace without replacing an existing path");
         }
     } catch (...) {

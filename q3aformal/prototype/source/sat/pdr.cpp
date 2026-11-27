@@ -593,8 +593,7 @@ public:
     const std::filesystem::path& path() const noexcept { return path_; }
 
     void publish() {
-        if (!MoveFileW(path_.c_str(), destination_.c_str())) {
-            const std::error_code error(static_cast<int>(GetLastError()), std::system_category());
+        if (const auto error = q3a::publish_no_replace(path_, destination_)) {
             throw std::runtime_error("cannot publish checked PDR evidence: " + error.message());
         }
         published_ = true;

@@ -15,7 +15,6 @@
 #include <chrono>
 #include <fstream>
 #include <stdexcept>
-#include <windows.h>
 
 namespace q3a::four_state {
 namespace {
@@ -499,11 +498,11 @@ template <typename Stage>
 ProofResult publish_evidence(const std::filesystem::path& directory, Stage stage) {
     const auto nonce = std::chrono::steady_clock::now().time_since_epoch().count();
     const auto staging = directory.parent_path() /
-        (".q3a-four-" + std::to_string(GetCurrentProcessId()) + "-" + std::to_string(nonce));
+        (".q3a-four-" + std::to_string(q3a::process_id()) + "-" + std::to_string(nonce));
     if (!std::filesystem::create_directory(staging)) throw std::runtime_error("cannot stage four-state evidence");
     try {
         auto result = stage(staging);
-        if (!MoveFileW(staging.c_str(), directory.c_str())) throw std::runtime_error("cannot publish four-state evidence");
+        if (q3a::publish_no_replace(staging, directory)) throw std::runtime_error("cannot publish four-state evidence");
         return result;
     } catch (...) {
         std::error_code ignored;
@@ -795,7 +794,7 @@ std::string save_waveform(const std::filesystem::path& path, const lowering::TIR
 
     const auto nonce = std::chrono::steady_clock::now().time_since_epoch().count();
     const auto staging = target.parent_path() /
-        (".q3a-four-vcd-" + std::to_string(GetCurrentProcessId()) + "-" + std::to_string(nonce));
+        (".q3a-four-vcd-" + std::to_string(q3a::process_id()) + "-" + std::to_string(nonce));
     if (!std::filesystem::create_directory(staging)) throw std::runtime_error("cannot stage four-state waveform");
     const auto file = staging / "result.vcd";
     try {
@@ -814,7 +813,7 @@ std::string save_waveform(const std::filesystem::path& path, const lowering::TIR
             digest = sha256_stream(checked.stream());
         }
         budget.check();
-        if (!MoveFileW(file.c_str(), target.c_str())) throw std::runtime_error("cannot publish four-state waveform");
+        if (q3a::publish_no_replace(file, target)) throw std::runtime_error("cannot publish four-state waveform");
         std::error_code ignored;
         std::filesystem::remove(staging, ignored);
         return digest;
