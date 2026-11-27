@@ -195,7 +195,7 @@ def verify_outputs(exe, case, folder, logs=None):
         with stdout.open("xb") as out, stderr.open("xb") as err:
             try:
                 code = subprocess.run([str(exe), *args], cwd=ROOT, stdout=out, stderr=err, timeout=120,
-                                      creationflags=subprocess.CREATE_NO_WINDOW).returncode
+                                      creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0)).returncode
             except subprocess.TimeoutExpired:
                 code = None
         verifiers.append({"obligation": name, "arguments": args, "exit_code": code,

@@ -1,0 +1,59 @@
+name: Linux x86-64 qualification
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - codex/linux-x86-64
+
+permissions:
+  contents: read
+
+jobs:
+  qualify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Build and test
+        run: |
+          set -euo pipefail
+          uname -a
+          lscpu
+          cmake -S q3aformal -B q3aformal/build/linux -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS_RELEASE="-O2 -DNDEBUG"
+          cmake --build q3aformal/build/linux --parallel 3
+          ctest --test-dir q3aformal/build/linux --output-on-failure
+      - name: Package and test installation
+        run: |
+          set -euo pipefail
+          cpack --config q3aformal/build/linux/CPackConfig.cmake -B candidate
+          (
+            cd candidate
+            windows=q3aformal-windows-x64-development-preview-r16.zip
+            curl -fsSL --retry 3 -O "https://github.com/nguyenquanicd/Q3AFORMAL/releases/download/r16/$windows"
+            sha256sum -c ../SHA256SUMS
+            sha256sum q3aformal-linux-x64.tar.gz "$windows" > INSTALL_SHA256SUMS
+          )
+          cp install.py candidate/
+          python3 candidate/install.py --assets-dir candidate --prefix "$RUNNER_TEMP/q3aformal"
+          python3 q3aformal/prototype/tests/test_linux_cli.py "$RUNNER_TEMP/q3aformal/prototype/bin/q3aformal-sourcecheck" "$RUNNER_TEMP/q3aformal/prototype/bin/q3aformal-proofcheck"
+      - name: Benchmark the installed binary
+        run: |
+          set -euo pipefail
+          python3 q3aformal/prototype/benchmark/run_linux_subsystem_benchmark.py "$RUNNER_TEMP/q3aformal/prototype/bin/q3aformal-sourcecheck" evidence
+          cp evidence/verdict.json candidate/linux-x86-64-verdict.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: linux-qualification-evidence
+          path: evidence/
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: qualified-release-files
+          path: |
+            candidate/q3aformal-linux-x64.tar.gz
+            candidate/q3aformal-windows-x64-development-preview-r16.zip
+            candidate/INSTALL_SHA256SUMS
+            candidate/install.py
+            candidate/linux-x86-64-verdict.json
+          if-no-files-found: error
