@@ -3,6 +3,7 @@
 import argparse
 from hashlib import sha256
 from pathlib import Path, PurePosixPath, PureWindowsPath
+import ntpath
 import os
 import platform
 import re
@@ -33,13 +34,19 @@ def select_archive(system, machine):
     return ASSETS[system]
 
 
+def reserved_windows_name(name):
+    if hasattr(ntpath, "isreserved"):
+        return ntpath.isreserved(name)
+    return PureWindowsPath(name).is_reserved()
+
+
 def checked_path(name):
     path = PurePosixPath(name)
     windows = PureWindowsPath(name)
     if path.is_absolute() or windows.drive or not path.parts or "\\" in name or ".." in path.parts:
         raise ValueError(f"Unsafe archive member {name!r}")
     if any(not re.fullmatch(r"[A-Za-z0-9_.+ -]+", component) or component.endswith((".", " "))
-           or PureWindowsPath(component).is_reserved() for component in path.parts):
+           or reserved_windows_name(component) for component in path.parts):
         raise ValueError(f"Unsupported archive name {name!r}")
     return path
 
