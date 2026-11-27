@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
 project(Q3AFORMAL LANGUAGES CXX)
-if(NOT CMAKE_SYSTEM_NAME STREQUAL "Linux")
-    message(FATAL_ERROR "Use the PowerShell build on Windows.")
+if(NOT CMAKE_SYSTEM_NAME MATCHES "^(Linux|Darwin)$")
+    message(FATAL_ERROR "This build supports Linux and macOS. Use the PowerShell build on Windows.")
 endif()
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -21,7 +21,7 @@ set(features Q3A_ENABLE_DEVELOPMENT_MEMORY Q3A_ENABLE_DEVELOPMENT_EVENT_MASK
     Q3A_ENABLE_DEVELOPMENT_SAMPLED_VALUES Q3A_ENABLE_DEVELOPMENT_LIVENESS Q3A_ENABLE_DEVELOPMENT_FOUR_STATE)
 set(identity "${CMAKE_CURRENT_BINARY_DIR}/q3a_build_info.hpp")
 file(GENERATE OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/q3a-build-configuration-$<CONFIG>.txt"
-    CONTENT "Linux ${CMAKE_SYSTEM_PROCESSOR} | $<CONFIG> | ${CMAKE_CXX_FLAGS} | ${CMAKE_CXX_FLAGS_RELEASE} | ${CMAKE_CXX_FLAGS_DEBUG} | ${features}")
+    CONTENT "${CMAKE_SYSTEM_NAME} ${CMAKE_SYSTEM_PROCESSOR} ${CMAKE_OSX_ARCHITECTURES} ${CMAKE_OSX_DEPLOYMENT_TARGET} | $<CONFIG> | ${CMAKE_CXX_FLAGS} | ${CMAKE_CXX_FLAGS_RELEASE} | ${CMAKE_CXX_FLAGS_DEBUG} | ${features}")
 add_custom_command(OUTPUT "${identity}"
     COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/linux_build_identity.py"
         "${identity}" "${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}"
@@ -45,15 +45,27 @@ install(FILES prototype/pdr-pipeline.q3a prototype/pdr-cover.q3a
 install(FILES prototype/corpus/source-model-vectors/pdr_pipeline.sv
     prototype/corpus/source-model-vectors/pdr_cover.sv prototype/corpus/source-model-vectors/four_state_cover.sv
     DESTINATION prototype/corpus/source-model-vectors)
-install(FILES docs/linux.md DESTINATION . RENAME README.md)
+if(APPLE)
+    if(CMAKE_SYSTEM_PROCESSOR MATCHES "^(arm64|aarch64)$")
+        set(architecture arm64)
+    elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "^(x86_64|AMD64)$")
+        set(architecture x64)
+    else()
+        message(FATAL_ERROR "Unsupported macOS architecture ${CMAKE_SYSTEM_PROCESSOR}")
+    endif()
+    install(FILES docs/macos.md DESTINATION . RENAME README.md)
+    set(CPACK_PACKAGE_FILE_NAME "q3aformal-macos-${architecture}")
+else()
+    install(FILES docs/linux.md DESTINATION . RENAME README.md)
+    set(CPACK_PACKAGE_FILE_NAME q3aformal-linux-x64)
+endif()
 install(FILES ../LICENSE DESTINATION .)
 
 enable_testing()
-add_test(NAME linux-cli COMMAND "${Python3_EXECUTABLE}"
+add_test(NAME unix-cli COMMAND "${Python3_EXECUTABLE}"
     "${CMAKE_CURRENT_SOURCE_DIR}/prototype/tests/test_linux_cli.py"
     "$<TARGET_FILE:q3aformal-sourcecheck>" "$<TARGET_FILE:q3aformal-proofcheck>")
 
 set(CPACK_GENERATOR TGZ)
-set(CPACK_PACKAGE_FILE_NAME q3aformal-linux-x64)
 set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY OFF)
 include(CPack)

@@ -4,6 +4,10 @@
 #include <windows.h>
 #include <bcrypt.h>
 #include <psapi.h>
+#elif defined(__APPLE__)
+#include <CommonCrypto/CommonDigest.h>
+#include <mach/mach.h>
+#include <mach-o/dyld.h>
 #else
 #include <cerrno>
 #include <cstring>
@@ -86,6 +90,28 @@ bool private_commit_bytes(std::uint64_t& bytes) {
     return true;
 }
 
+#elif defined(__APPLE__)
+std::uint64_t available_physical_bytes() {
+    const auto host = mach_host_self();
+    vm_statistics64_data_t statistics{};
+    mach_msg_type_number_t count = HOST_VM_INFO64_COUNT;
+    vm_size_t page_size = 0;
+    const auto page_status = host_page_size(host, &page_size);
+    const auto status = host_statistics64(host, HOST_VM_INFO64,
+        reinterpret_cast<host_info64_t>(&statistics), &count);
+    mach_port_deallocate(mach_task_self(), host);
+    if (page_status != KERN_SUCCESS || status != KERN_SUCCESS) return 0;
+    return (static_cast<std::uint64_t>(statistics.free_count) + statistics.inactive_count) * page_size;
+}
+
+bool private_commit_bytes(std::uint64_t& bytes) {
+    task_vm_info_data_t info{};
+    mach_msg_type_number_t count = TASK_VM_INFO_COUNT;
+    if (task_info(mach_task_self(), TASK_VM_INFO, reinterpret_cast<task_info_t>(&info),
+                  &count) != KERN_SUCCESS || count < TASK_VM_INFO_REV1_COUNT) return false;
+    bytes = info.phys_footprint;
+    return true;
+}
 #else
 std::uint64_t available_physical_bytes() {
     std::ifstream data("/proc/meminfo");
@@ -152,6 +178,24 @@ int run_utf8_command_line(int argc, wchar_t** argv, int (*entry)(int, char**)) {
     return entry(argc, pointers.data());
 }
 
+#endif
+
+#ifndef _WIN32
+std::filesystem::path current_executable_path() {
+#ifdef __APPLE__
+    std::vector<char> path(1024);
+    auto size = static_cast<std::uint32_t>(path.size());
+    if (_NSGetExecutablePath(path.data(), &size) != 0) {
+        path.resize(size);
+        if (_NSGetExecutablePath(path.data(), &size) != 0) {
+            throw std::runtime_error("cannot locate the macOS executable");
+        }
+    }
+    return std::filesystem::canonical(path.data());
+#else
+    return "/proc/self/exe";
+#endif
+}
 #endif
 
 bool can_reserve_physical_memory(std::uint64_t reservation_bytes, std::uint64_t reserve_bytes) {
@@ -325,6 +369,20 @@ std::string compute_sha256(Feed feed) {
         BCryptFinishHash(hash.value, digest.data(), digest_length, 0),
         "BCryptFinishHash");
 
+#elif defined(__APPLE__)
+    CC_SHA256_CTX context{};
+    if (CC_SHA256_Init(&context) != 1) {
+        throw std::runtime_error("cannot initialize macOS SHA-256");
+    }
+    feed([&](const char* data, std::uint32_t count) {
+        if (CC_SHA256_Update(&context, data, count) != 1) {
+            throw std::runtime_error("cannot update macOS SHA-256");
+        }
+    });
+    std::array<unsigned char, CC_SHA256_DIGEST_LENGTH> digest{};
+    if (CC_SHA256_Final(digest.data(), &context) != 1) {
+        throw std::runtime_error("cannot finalize macOS SHA-256");
+    }
 #else
     struct Socket {
         int fd;

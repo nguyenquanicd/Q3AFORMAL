@@ -367,6 +367,10 @@ Workflow tải lại gói R17 Preview công khai, cài vào thư mục mới tr�
 
 Để build trên Windows, dùng PowerShell 7 và MinGW-w64 hỗ trợ C++17. Từ thư mục `q3aformal` trong repo, chạy `.\prototype\source\source_manager\build.ps1` và `.\prototype\checker\build.ps1`. Nếu `g++.exe` nằm ngoài `PATH`, truyền tùy chọn `-Compiler '<path-to-g++.exe>'`. Để build và chạy hồi quy trên Linux, dùng CMake 3.20 trở lên, trình biên dịch C++17 và Python 3. [Build trên Windows](../README.md#windows-build-from-source) · [Build trên Linux](docs/linux.md#build-and-validate)
 
+### macOS 15 trên Apple silicon và Intel
+
+Repo có bản build phát triển cho macOS 15. Dùng CMake để build từ mã nguồn hoặc tải artifact phù hợp với kiến trúc của máy từ workflow macOS. Giải nén artifact, giữ `install.py`, `INSTALL_SHA256SUMS` và gói `.tar.gz` trong cùng thư mục rồi chạy `python3 install.py`. Dùng các lệnh Linux trong mục chạy thử ở trên và mở waveform bằng `open cover-witness.html`. [Hướng dẫn build và chạy macOS](docs/macos.md) · [Workflow macOS](https://github.com/nguyenquanicd/Q3AFORMAL/actions/workflows/macos-cli.yml)
+
 ### Thử nghiệm kiểm chứng bộ nhớ ở bản phát triển
 
 Bản build với `-EnableDevelopmentMemory` bổ sung `dev-prove-memory` và `dev-verify-memory` cho cấu hình bộ nhớ đồng bộ một clock đang thử nghiệm. Cần một manifest dự án, tên assertion, thư mục bằng chứng và giới hạn số ô nhớ. Bản build phát triển hiện công bố thư mục bằng chứng sau khi cả ba chứng chỉ đã được kiểm tra. Khi mở lại kết quả, công cụ dựng lại mô hình từ mã nguồn rồi xác minh riêng chứng chỉ đọc, ghi và thuộc tính chính. [Cách build và chạy thử](specs/004-phase2-subsystem/memory-and-equivalence-review.md#development-command-line)

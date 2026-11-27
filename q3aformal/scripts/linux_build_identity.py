@@ -1,4 +1,4 @@
-"""Generate Linux build identities from source bytes and compiler settings."""
+"""Generate Unix build identities from source bytes and compiler settings."""
 
 from hashlib import sha256
 import json

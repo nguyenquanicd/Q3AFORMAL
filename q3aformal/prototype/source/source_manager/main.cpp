@@ -77,6 +77,9 @@
 namespace {
 
 std::filesystem::path gExecutablePath;
+#ifdef __APPLE__
+pid_t gBatchCoordinator = 0;
+#endif
 
 enum class ProofExit { Conclusive = 0, Inconclusive = 1, SetupError = 2, EngineError = 3 };
 
@@ -219,6 +222,9 @@ struct ProofCommand {
     }
 
     void check_control(bool force_poll = false) const {
+#ifdef __APPLE__
+        if (gBatchCoordinator != 0 && getppid() != gBatchCoordinator) throw ProofStop::ControlError;
+#endif
         if (!has_control()) return;
         if (console_control) {
             if (const auto event = console_stop()) throw *event;
@@ -3075,7 +3081,10 @@ int product_batch_worker(int argc, const char* const* argv) {
         gExecutablePath = std::filesystem::path(executable);
 #else
         if (!std::freopen(log.c_str(), "wb", stderr)) return 3;
-        gExecutablePath = "/proc/self/exe";
+#ifdef __APPLE__
+        gBatchCoordinator = getppid();
+        if (gBatchCoordinator <= 1) return 3;
+#endif
 #endif
         ProofCommand load(true);
         load.job_memory_mib = memory;
@@ -4610,7 +4619,12 @@ static int cli_main(int argc, char** argv) {
         std::filesystem::u8path(argv[0]), executable_error);
     if (executable_error) gExecutablePath = std::filesystem::u8path(argv[0]);
 #else
-    gExecutablePath = "/proc/self/exe";
+    try {
+        gExecutablePath = q3a::current_executable_path();
+    } catch (const std::exception& error) {
+        std::cerr << "Q3A_COMMAND_LINE_ERROR " << error.what() << '\n';
+        return 2;
+    }
 #endif
 #ifdef Q3A_ENABLE_DEVELOPMENT_FOUR_STATE
     if (argc >= 2 && std::string_view(argv[1]) == "dev-lower-four-state") return development_four_state_model(argc, argv);

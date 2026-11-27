@@ -69,7 +69,9 @@ inline std::filesystem::path canonical_directory(const std::filesystem::path& ab
 #else
 #include <cerrno>
 #include <fcntl.h>
+#ifndef __APPLE__
 #include <linux/fs.h>
+#endif
 #include <unistd.h>
 
 namespace q3a::bundle::detail {
@@ -118,6 +120,10 @@ inline std::error_code publish_no_replace(const std::filesystem::path& stage,
 #ifdef _WIN32
     if (!MoveFileW(stage.c_str(), target.c_str())) {
         return {static_cast<int>(GetLastError()), std::system_category()};
+    }
+#elif defined(__APPLE__)
+    if (renamex_np(stage.c_str(), target.c_str(), RENAME_EXCL) != 0) {
+        return {errno, std::generic_category()};
     }
 #else
     if (renameat2(AT_FDCWD, stage.c_str(), AT_FDCWD, target.c_str(), RENAME_NOREPLACE) != 0) {

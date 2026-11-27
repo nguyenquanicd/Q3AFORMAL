@@ -1,10 +1,13 @@
 #include "batch_worker.hpp"
+#include "platform_support.hpp"
 
 #include <limits>
 #ifndef _WIN32
 #include <cerrno>
 #include <csignal>
+#ifndef __APPLE__
 #include <sys/prctl.h>
+#endif
 #include <sys/resource.h>
 #include <sys/wait.h>
 #include <system_error>
@@ -134,18 +137,24 @@ BatchWorker::BatchWorker(const std::vector<std::string>& arguments, std::uint64_
     for (auto& argument : encoded) argv.push_back(argument.data());
     argv.push_back(nullptr);
 
+    const auto executable = current_executable_path();
     const auto parent = getpid();
     process_ = fork();
     if (process_ < 0) throw std::system_error(errno, std::generic_category(), "fork proof worker");
     if (process_ == 0) {
-        // The child must also exit if the coordinator dies before exec.
-        if (prctl(PR_SET_PDEATHSIG, SIGKILL) != 0 || getppid() != parent) _exit(3);
+#ifndef __APPLE__
+        if (prctl(PR_SET_PDEATHSIG, SIGKILL) != 0) _exit(3);
+#endif
+        if (getppid() != parent) _exit(3);
+#ifndef __APPLE__
         rlimit limit{};
         if (getrlimit(RLIMIT_AS, &limit) != 0) _exit(3);
         const auto bytes = static_cast<rlim_t>(memory_mib * kMiB);
         if (bytes < limit.rlim_cur) limit.rlim_cur = bytes;
         if (setrlimit(RLIMIT_AS, &limit) != 0) _exit(3);
-        execv("/proc/self/exe", argv.data());
+#endif
+        // macOS workers use the checked resident-footprint budget in the solver.
+        execv(executable.c_str(), argv.data());
         _exit(3);
     }
 }
@@ -166,7 +175,11 @@ void BatchWorker::reap(bool block) const {
     while (pid < 0 && errno == EINTR);
     if (pid < 0) throw std::system_error(errno, std::generic_category(), "wait for proof worker");
     if (pid == 0) return;
+#ifdef __APPLE__
+    peak_rss_bytes_ = static_cast<std::uint64_t>(usage.ru_maxrss);
+#else
     peak_rss_bytes_ = static_cast<std::uint64_t>(usage.ru_maxrss) * 1024;
+#endif
     result_ = WIFEXITED(state) ? static_cast<std::uint32_t>(WEXITSTATUS(state)) : 3U;
 }
 

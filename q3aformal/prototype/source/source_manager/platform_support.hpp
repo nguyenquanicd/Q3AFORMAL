@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <filesystem>
 #include <functional>
 #include <iosfwd>
 #include <stdexcept>
@@ -17,6 +18,10 @@ std::string sha256_hex(std::string_view bytes);
 std::string sha256_stream(std::istream& input);
 std::string sha256_stream(std::istream& input, std::uint64_t expected_bytes);
 std::string sha256_generated(const std::function<void(std::ostream&)>& write);
+
+#ifndef _WIN32
+std::filesystem::path current_executable_path();
+#endif
 
 bool can_reserve_physical_memory(std::uint64_t reservation_bytes, std::uint64_t reserve_bytes);
 
